@@ -1,0 +1,779 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>콘텐츠본부 AI 활용 사례</title><style>*,*::before,*::after{box-sizing:border-box}html,body{margin:0}[hidden]{display:none!important}</style></head><body>
+
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+@font-face{font-family:"Pretendard Variable";font-weight:45 920;font-style:normal;font-display:swap;src:url("fonts/PretendardVariable.woff2") format("woff2-variations"),url("fonts/PretendardVariable.woff2") format("woff2")}
+/* 레이아웃: 상단 탭 → 좌우로 넘기는 대표 글 → (필터+목록 | 오른쪽 AI 도우미). 흰색·회색 바탕, 파랑은 버튼에만. 글꼴 Pretendard */
+:root{
+  --bg:#ffffff; --soft:#f6f7f8; --card:#ffffff; --ink:#111316; --sub:#5e646e; --faint:#9298a2; --line:#e8eaed;
+  --green:#2b44c7; --green-soft:#f3f4f6; --ok:#15884a; --ok-soft:#e7f5ee; --mark:#ffe46b; --heart:#e5484d; --orange:#e2611b; --amber:#c98a00; --seg:#111316; --seg-ink:#ffffff; --go-ink:#ffffff;
+  --shadow:0 1px 2px rgba(17,19,22,.04),0 8px 24px -16px rgba(17,19,22,.18);
+  --serif:var(--f);
+  --f:"Pretendard Variable",Pretendard,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  --mono:var(--f);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f1113; --soft:#16191c; --card:#15181b; --ink:#eef0f2; --sub:#a4aab3; --faint:#6f7680; --line:#262a2f;
+  --green:#93a5ff; --green-soft:rgba(255,255,255,.05); --ok:#4cc986; --ok-soft:rgba(76,201,134,.12); --mark:#6e5c10; --heart:#ff6b70; --orange:#ff8a4c; --amber:#e9b440; --seg:#eef0f2; --seg-ink:#0f1113; --go-ink:#0b1030;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px -16px rgba(0,0,0,.6); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1113; --soft:#16191c; --card:#15181b; --ink:#eef0f2; --sub:#a4aab3; --faint:#6f7680; --line:#262a2f;
+  --green:#93a5ff; --green-soft:rgba(255,255,255,.05); --ok:#4cc986; --ok-soft:rgba(76,201,134,.12); --mark:#6e5c10; --heart:#ff6b70; --orange:#ff8a4c; --amber:#e9b440; --seg:#eef0f2; --seg-ink:#0f1113; --go-ink:#0b1030;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px -16px rgba(0,0,0,.6); color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f);font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+a{color:var(--ink);text-underline-offset:3px}
+.wrap{max-width:1640px;margin:0 auto;padding-left:max(32px,env(safe-area-inset-left,0px));padding-right:max(32px,env(safe-area-inset-right,0px))}
+.mono{font-family:var(--mono)}
+
+/* 상단 */
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.top-in{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:24px;height:62px}
+.logo{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--ink);white-space:nowrap}
+.logo b{font-weight:800;font-size:19px;letter-spacing:-.03em}
+
+.logo .ci{height:40px;width:auto;flex:none;color:var(--ink);display:block}
+.logo span{border-left:1px solid var(--line);padding-left:12px;font-size:13.5px;color:var(--sub)}
+.nav{display:flex;gap:6px;height:62px;align-items:center}
+.nav a{display:flex;align-items:center;font-weight:700;font-size:15px;color:var(--sub);text-decoration:none;padding:7px 16px;border-radius:10px}
+.nav a:hover{color:var(--ink)}
+.nav a[aria-current="page"]{color:var(--ink);background:var(--soft)}
+.top-r{display:flex;align-items:center;gap:8px;justify-content:flex-end}
+.search{position:relative;width:250px}
+.search input{width:100%;height:38px;border-radius:10px;border:1px solid var(--line);background:var(--soft);padding:0 46px 0 36px}
+.search input::placeholder{color:var(--faint)}
+.search svg{position:absolute;left:12px;top:11px;width:16px;height:16px;stroke:var(--faint)}
+.search kbd{position:absolute;right:10px;top:9px;font-family:var(--mono);font-size:11px;color:var(--faint);border:1px solid var(--line);border-radius:5px;padding:0 5px;background:var(--card)}
+.btn{height:38px;border-radius:10px;border:1px solid var(--line);background:var(--card);padding:0 14px;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap}
+.btn:hover{background:var(--soft)}
+.btn.go{background:var(--green);border-color:var(--green);color:var(--go-ink)}
+.btn.go:hover{filter:brightness(1.06)}
+.pill{border:0;border-radius:10px;background:var(--green);color:var(--go-ink);font-weight:700;padding:9px 16px;cursor:pointer;white-space:nowrap}
+.pill.ghost{background:var(--card);color:var(--ink);border:1px solid var(--line)}
+
+main{padding-block:20px 120px}
+
+/* 대표 글(좌우 스크롤) */
+.hero-bar{display:flex;align-items:center;gap:14px;margin:6px 0 12px}
+.hero-bar h2{margin:0;font-size:14px;font-weight:700}
+.toggle{display:flex;background:var(--soft);border:1px solid var(--line);border-radius:9px;padding:3px}
+.toggle button{border:0;background:none;border-radius:7px;padding:3px 12px;font-size:13px;font-weight:500;color:var(--sub);cursor:pointer}
+.toggle button[aria-pressed="true"]{background:var(--card);color:var(--ink);font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.hero-bar .ctr{margin-left:auto;display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:12px;color:var(--faint)}
+.hero-bar .ctr button{width:32px;height:32px;border-radius:50%;border:1px solid var(--line);background:var(--card);cursor:pointer}
+.strip{display:grid;grid-auto-flow:column;grid-auto-columns:92%;gap:16px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding:2px 2px 8px}
+.strip::-webkit-scrollbar{display:none}
+.hero{all:unset;box-sizing:border-box;cursor:pointer;scroll-snap-align:start;background:var(--soft);border-radius:22px;display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:32px;padding:26px 30px;min-width:0;max-width:100%}
+.hero:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+.hero .num{font-family:var(--f);font-size:12px;font-weight:700;background:var(--ink);color:var(--bg);border-radius:999px;padding:3px 11px;display:inline-block;letter-spacing:.04em}
+.hero .num::before{content:"No."}
+.hero .lbl{margin:14px 0 8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px;color:var(--sub)}
+.hero .lbl b{color:var(--ink)}
+.hero h3{margin:0;font-size:31px;font-weight:800;letter-spacing:-.035em;line-height:1.35;text-wrap:balance}
+.hl{background:none;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+.hero .sum{margin:10px 0 14px;color:var(--sub);font-size:14.5px;max-width:62ch;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.hero .metaline{display:flex;align-items:center;gap:10px;flex-wrap:wrap;color:var(--faint);font-size:12.5px;margin-top:12px}
+.hero .art{border-radius:14px;overflow:hidden;background:var(--card);box-shadow:var(--shadow);transform:rotate(1.2deg);min-height:210px;max-height:240px}
+.hero .art img{width:100%;height:100%;object-fit:cover;object-position:left top;display:block}
+.hero .art .chatshot{height:100%}
+.hero .ansbox{padding:20px;display:grid;gap:8px;align-content:start;font-size:13.5px;color:var(--sub)}
+.hero .ansbox b{color:var(--ink);font-size:12px}
+
+/* 지금 뜨는 */
+.trend{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:18px 0 26px}
+.trend > span{font-weight:700;margin-right:4px}
+.trend > span{color:var(--sub);font-weight:500}
+.kw{border:0;background:var(--soft);border-radius:8px;padding:5px 11px;font-weight:500;font-size:13px;cursor:pointer;color:var(--ink)}
+.kw::before{content:"#";color:var(--faint);margin-right:2px;font-weight:700}
+.kw small{color:var(--faint);font-weight:400;margin-left:4px}
+.kw[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+
+/* 2단 */
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:24px;align-items:start}
+.box{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow)}
+.filters{padding:14px 18px;display:flex;flex-wrap:wrap;gap:12px 22px;margin-bottom:20px}
+.seg{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.seg > span{font-size:12.5px;font-weight:700;color:var(--ink);margin-right:4px}
+.seg button{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:3px 12px;font-size:13px;font-weight:500;color:var(--sub);cursor:pointer;white-space:nowrap}
+.seg button:hover{color:var(--ink)}
+.seg button[aria-pressed="true"]{background:var(--green);border-color:var(--green);color:var(--go-ink);font-weight:700}
+
+.table{padding:22px 24px 10px}
+.table-h{display:flex;align-items:baseline;gap:12px;margin-bottom:12px}
+.table-h h2{margin:0;font-family:var(--serif);font-size:20px;font-weight:900}
+.table-h .r{margin-left:auto;color:var(--faint);font-size:12.5px;display:flex;gap:10px;align-items:center}
+.tr{display:grid;gap:16px;align-items:center;padding:16px 0;border-top:1px solid var(--line)}
+.tr.hd{font-size:12px;color:var(--faint);padding:8px 0;border-top:0;border-bottom:1px solid var(--line)}
+.tr.hd + .tr{border-top:0}
+button.tr{all:unset;box-sizing:border-box;display:grid;gap:16px;align-items:center;padding:16px 10px;margin:0 -10px;border-radius:12px;border-top:1px solid var(--line);cursor:pointer;width:100%}
+button.tr:hover{background:var(--soft)}
+button.tr:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+.tr.cols-case{grid-template-columns:44px 74px minmax(0,1fr) 90px 92px 70px}
+.tr.cols-lec{grid-template-columns:44px 74px minmax(0,1fr) 64px 64px 70px}
+.tr.cols-qna{grid-template-columns:44px 84px minmax(0,1fr) 110px 56px 56px}
+.tr .n{font-size:12.5px;font-variant-numeric:tabular-nums;font-weight:700;color:var(--sub);width:28px;height:28px;border-radius:50%;background:var(--soft);display:grid;place-items:center}
+.tr h3{margin:0 0 3px;font-size:15px;font-weight:700;letter-spacing:-.01em}
+.tr p{margin:0;color:var(--sub);font-size:13px;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+.tr .mid{min-width:0;display:grid;gap:5px}
+.tr .sm{font-size:12.5px;color:var(--faint);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.tr .v{font-size:13px}
+.lab{font-size:12px;font-weight:700;border-radius:999px;padding:2px 10px;background:var(--soft);color:var(--ink);justify-self:start;white-space:nowrap}
+.lab.gray{background:var(--soft);color:var(--sub)}
+.lab.orange{background:var(--card);color:var(--sub);box-shadow:inset 0 0 0 1px var(--line)}
+.tag{font-size:11.5px;border-radius:6px;padding:1px 7px;background:var(--soft);color:var(--sub);border:1px solid var(--line)}
+.tag.blue{background:var(--soft);color:var(--ink);border-color:transparent}
+.tag.green{background:var(--ink);color:var(--bg);border-color:transparent}
+.tags{display:flex;gap:5px;flex-wrap:wrap}
+.dots{display:flex;gap:3px;margin-top:3px}
+.dots i{width:6px;height:6px;border-radius:50%;background:var(--line)}
+.dots i.on{background:var(--ink)}
+.more{display:inline-flex;gap:6px;font-weight:700;padding:14px 0;border-top:1px solid var(--line);width:100%;color:var(--ink);background:none;border-left:0;border-right:0;border-bottom:0;cursor:pointer}
+.empty{padding:40px;text-align:center;color:var(--faint)}
+
+/* 오른쪽: AI 질문 칸 */
+.side{position:sticky;top:calc(80px + env(safe-area-inset-top,0px));display:grid;gap:16px}
+.ask{padding:20px;background:var(--green-soft);border:0;box-shadow:none}
+.ask h2{margin:0 0 14px;font-family:var(--serif);font-size:19px;font-weight:900}
+
+.askbox{border:1px solid var(--line);background:var(--card);border-radius:14px;padding:14px;box-shadow:var(--shadow)}
+.askbox textarea{width:100%;min-height:76px;border:0;background:transparent;resize:none;font-size:14.5px;outline:none}
+.askbox button:disabled{opacity:.5;cursor:wait}
+.askbox .row{display:flex;align-items:center;justify-content:space-between;margin-top:6px}
+.askbox .cnt{font-family:var(--mono);font-size:12px;color:var(--faint)}
+.hint{margin:14px 0 8px;font-size:12.5px;color:var(--sub)}
+.suggest{display:flex;gap:6px;flex-wrap:wrap}
+.suggest button{border:0;background:var(--card);border-radius:8px;padding:5px 11px;font-size:12.5px;font-weight:500;cursor:pointer;text-align:left}
+.suggest button:hover{background:var(--soft)}
+.log{display:grid;gap:10px;margin-top:16px;max-height:420px;overflow-y:auto}
+.log:empty{display:none}
+.msg{font-size:13.5px;white-space:pre-wrap;overflow-wrap:anywhere}
+.msg.me{justify-self:end;background:var(--soft);border-radius:10px;padding:7px 11px;max-width:90%}
+.msg.bot{border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--card)}
+.msg.bot.ai::before{content:"AI 답변 · Claude Haiku 5.5";display:block;font-size:11.5px;color:var(--faint);margin-bottom:6px}
+.msg.bot.demo::before{content:"예시 답변 · AI 연결 안 됨";display:block;font-size:11.5px;color:var(--faint);margin-bottom:6px;font-family:var(--mono)}
+.msg .src{display:block;margin-top:8px;font-size:12px;color:var(--sub)}
+.watch{padding:18px 20px}
+.watch-h{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px}
+.watch-h h2{margin:0;font-family:var(--serif);font-size:17px;font-weight:900}
+.watch-h span{font-size:12px;color:var(--faint)}
+.wi{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:22px 1fr;gap:8px;padding:10px 0;border-top:1px solid var(--line);width:100%}
+.wi:first-of-type{border-top:0}
+.wi .k{font-family:var(--mono);color:var(--faint);font-size:13px}
+.wi b{font-weight:700;font-size:14px;display:block}
+.wi small{color:var(--faint);font-size:12px}
+.wi:hover b{text-decoration:underline;text-underline-offset:3px}
+
+/* 공통 조각(상세·모달) */
+.who{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--sub)}
+.av{width:22px;height:22px;border-radius:50%;display:inline-grid;place-items:center;font-size:10.5px;font-weight:700;color:#fff;flex:none}
+.star{font-weight:700;font-variant-numeric:tabular-nums}
+.star::before{content:"★ ";color:var(--ink)}
+.status{font-size:12px;font-weight:700;border-radius:6px;padding:2px 8px;display:inline-block;justify-self:start;white-space:nowrap}
+.status.done{background:var(--soft);color:var(--ink)}
+.status.wait{background:var(--card);color:var(--sub);box-shadow:inset 0 0 0 1px var(--line)}
+.chatshot{height:100%;padding:16px;display:flex;flex-direction:column;gap:7px;background:var(--soft)}
+.chatshot .b{font-size:12px;line-height:1.5;padding:7px 10px;border-radius:10px;max-width:86%;background:var(--card);border:1px solid var(--line);white-space:pre-wrap}
+.chatshot .b.me{align-self:flex-end;background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.back{background:none;border:0;color:var(--sub);cursor:pointer;padding:0;margin-bottom:16px;font-weight:700}
+.back:hover{color:var(--ink)}
+.lesson{display:grid;grid-template-columns:1fr;gap:16px}
+.lesson > .side{position:static}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px;box-shadow:var(--shadow)}
+.panel+.panel{margin-top:16px}
+.panel h2{margin:0 0 12px;font-size:16px}
+.lesson h1{font-family:var(--serif);font-size:30px;font-weight:900;letter-spacing:-.03em;margin:8px 0 12px}
+.goalbox{background:var(--green-soft);border-radius:12px;padding:14px 16px;font-size:15px}
+.goalbox b{color:var(--ink);margin-right:8px}
+.fig{margin:0;border-radius:12px;overflow:hidden;border:1px solid var(--line)}
+.fig img{display:block;width:100%}
+.fig figcaption{font-size:12.5px;color:var(--sub);padding:8px 12px;background:var(--soft)}
+table.plan{width:100%;border-collapse:collapse}
+.plan td{padding:10px 8px;border-top:1px solid var(--line);vertical-align:top}
+.plan td:first-child{width:70px;color:var(--ink);font-weight:700;font-family:var(--mono);font-size:13px;white-space:nowrap}
+.prompt{background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:16px;font-size:13px;white-space:pre-wrap;position:relative;font-family:var(--mono);line-height:1.7}
+.prompt button{position:absolute;right:10px;top:10px;border:1px solid var(--line);border-radius:6px;background:var(--card);font-size:12px;padding:3px 10px;cursor:pointer;font-family:var(--f)}
+ul.clean{margin:0;padding-left:18px;display:grid;gap:6px}
+.qa{border-left:2px solid var(--green);padding:2px 0 2px 14px}
+.qa p{margin:0}.qa p+p{margin-top:6px;color:var(--sub)}
+.panel dl{margin:0;display:grid;gap:12px}
+.panel dt{font-size:12px;color:var(--faint)}
+.panel dd{margin:2px 0 0}
+.post h1{font-family:var(--serif);font-size:26px;font-weight:900;letter-spacing:-.02em;margin:10px 0 6px}
+.post .meta{color:var(--faint);font-size:13px;margin-bottom:16px}
+.post .q{font-size:15px;white-space:pre-wrap}
+.ans{border-top:1px solid var(--line);padding:16px 0}
+.ans .who{margin-bottom:6px}
+.ans p{margin:0;white-space:pre-wrap}
+.ans.best{background:var(--soft);border-radius:12px;padding:16px;border-top:0;margin-top:14px}
+.ans.best .lbl{font-size:12px;font-weight:700;color:var(--ink);margin-bottom:4px}
+.reply{display:flex;gap:10px;margin-top:16px}
+.reply textarea{flex:1;min-height:70px;border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--bg);resize:vertical}
+.modal{position:fixed;inset:0;z-index:30;background:rgba(10,12,14,.55);display:flex;align-items:center;justify-content:center;padding:24px}
+.sheet{background:var(--card);border:1px solid var(--line);border-radius:18px;width:100%;max-width:860px;max-height:calc(100vh - 48px);overflow-y:auto;position:relative}
+.sheet.sm{max-width:560px}
+.x{position:absolute;right:14px;top:12px;border:1px solid var(--line);background:var(--card);border-radius:50%;width:34px;height:34px;font-size:18px;cursor:pointer;color:var(--sub);z-index:2}
+.sheet .thumb{height:280px;overflow:hidden}
+.sheet .thumb img{width:100%;height:100%;object-fit:cover}
+.sheet .chatshot{padding:30px 34px}
+.sheet .chatshot .b{font-size:14px;max-width:70%}
+.sheet-in{padding:24px 32px 32px}
+.sheet-in h2{font-family:var(--serif);font-size:24px;font-weight:900;letter-spacing:-.02em;margin:10px 0 18px}
+.detail{display:grid;grid-template-columns:120px minmax(0,1fr);gap:10px 20px;margin:0}
+.detail dt{color:var(--faint)}
+.detail dd{margin:0}
+.form{display:grid;gap:14px}
+.form h2{margin:0;font-size:20px}
+.form label{display:grid;gap:6px;font-weight:500;font-size:13px}
+.form input,.form select,.form textarea{border:1px solid var(--line);border-radius:10px;padding:9px 12px;background:var(--bg);font-weight:400;font-size:14px}
+.form textarea{min-height:90px;resize:vertical}
+.form .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form .act{display:flex;justify-content:flex-end;gap:8px;margin-top:4px}
+.like{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:3px 11px 3px 9px;font-size:12.5px;font-weight:700;color:var(--sub);cursor:pointer;font-variant-numeric:tabular-nums;user-select:none;white-space:nowrap}
+.like::before{content:"♡";font-size:14px;line-height:1}
+.like:hover{border-color:var(--heart);color:var(--heart)}
+.like[aria-pressed="true"]{background:color-mix(in srgb,var(--heart) 10%,var(--card));border-color:var(--heart);color:var(--heart)}
+.like[aria-pressed="true"]::before{content:"♥"}
+@media (prefers-reduced-motion:no-preference){.like.pop::before{animation:pop .35s ease}@keyframes pop{50%{transform:scale(1.4)}}}
+.modelart{display:flex!important;flex-direction:column;justify-content:center;align-items:flex-start;gap:10px;padding:28px 30px;background:var(--card)!important}
+.modelart small{font-family:var(--mono);font-size:12px;color:var(--faint);letter-spacing:.08em;text-transform:uppercase}
+.modelart strong{font-size:34px;font-weight:800;line-height:1.15;letter-spacing:-.02em;color:var(--ink)}
+.toast{position:fixed;left:50%;bottom:32px;transform:translateX(-50%);background:var(--ink);color:var(--bg);border-radius:999px;padding:10px 20px;z-index:40;font-size:13.5px}
+
+@media (max-width:1180px){.layout{grid-template-columns:1fr}.side{position:static}.search{width:190px}}
+@media (max-width:900px){
+  .top-in{grid-template-columns:auto 1fr;height:auto;padding-block:10px}.nav{grid-column:1/-1;grid-row:2;height:40px}
+  .search{display:none}.hero{grid-template-columns:1fr}.hero .art{display:none}.hero h3{font-size:22px}
+  .tr.cols-case,.tr.cols-lec,.tr.cols-qna{grid-template-columns:36px minmax(0,1fr)}
+  .tr > :not(.n):not(.mid){display:none}.tr.hd{display:none}
+  .form .two{grid-template-columns:1fr}.detail{grid-template-columns:1fr;gap:2px}.sheet-in{padding:20px}
+}
+@media (max-width:520px){.wrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}.logo span{display:none}.strip{grid-auto-columns:100%}}
+</style>
+
+<header class="top">
+  <div class="wrap top-in">
+    <a class="logo" href="#lectures"><svg class="ci" viewBox="0 0 192 80" role="img" aria-label="동아출판"><path d="M21.593871,33.5437419 L21.593871,46.016 L12.4725806,46.016 L12.4725806,67.0914839 L21.593871,67.0914839 L21.593871,79.5643871 L-0.00032258065,79.5643871 L-0.00032258065,33.5437419 L21.593871,33.5437419 Z M40.6946452,58.3424516 C51.6694839,58.3424516 51.4920645,74.7437419 40.6946452,74.7437419 C29.8062581,74.7437419 29.6327097,58.3424516 40.6946452,58.3424516 Z M106.457226,50.9836129 L106.457226,55.0642581 L99.4385161,55.0642581 L99.4385161,57.9532903 L104.815935,57.9532903 L104.815935,67.2313548 L93.8391613,67.2313548 L93.8391613,69.5139355 L105.350774,69.5139355 L105.350774,73.0545806 L89.2630323,73.0545806 L89.2630323,63.7371613 L100.239806,63.7371613 L100.239806,61.368129 L89.2630323,61.368129 L89.2630323,57.9532903 L94.8185161,57.9532903 L94.8185161,55.0642581 L87.5307742,55.0642581 L87.5307742,50.9836129 L106.457226,50.9836129 Z M40.6946452,62.4334194 C35.2843226,62.4334194 35.2843226,70.5166452 40.6946452,70.5166452 C46.0565806,70.5166452 46.0565806,62.4334194 40.6946452,62.4334194 Z M125.306387,51.2609677 L125.306387,60.0216129 L136.427677,60.0216129 L136.427677,64.1583871 L120.908968,64.1583871 L120.908968,51.2609677 L125.306387,51.2609677 Z M48.6920645,33.5727742 L48.6920645,37.7095484 L37.6752903,37.7095484 L37.6752903,44.419871 L48.6920645,44.419871 L48.6920645,48.5508387 L43.3604516,48.5508387 L43.3604516,51.9979355 L50.3836774,51.9979355 L50.3836774,56.0811613 L31.4946452,56.0811613 L31.4946452,51.9979355 L38.6494839,51.9979355 L38.6494839,48.5508387 L33.2256129,48.5508387 L33.2256129,33.5727742 L48.6920645,33.5727742 Z M79.0041935,32.9968387 L79.0041935,38.9097419 L84.4480645,38.9097419 L84.4480645,43.2226452 L79.0041935,43.2226452 L79.0041935,55.3484516 L74.6022581,55.3484516 L74.6022581,32.9968387 L79.0041935,32.9968387 Z M136.225097,33.0448387 L136.225097,38.9093548 L141.630258,38.9093548 L141.630258,43.0874194 L136.225097,43.0874194 L136.225097,49.5835484 L131.830258,49.5835484 L131.830258,33.0448387 L136.225097,33.0448387 Z M62.3629032,33.1168387 C73.3725806,33.1168387 73.3280645,49.5607097 62.3629032,49.5607097 C51.4493548,49.5607097 51.4003226,33.1168387 62.3629032,33.1168387 Z M127.538645,33.6654839 L127.538645,37.6487097 L125.422516,37.6487097 L125.422516,44.5687097 L127.538645,44.5687097 L127.538645,48.5977419 L111.675419,48.5977419 L111.675419,44.5687097 L113.571548,44.5687097 L113.571548,37.6487097 L111.675419,37.6487097 L111.675419,33.6654839 L127.538645,33.6654839 Z M99.2623871,30.3597419 L99.2623871,34.4352258 L104.815935,34.4352258 L104.815935,38.5087742 L99.6449677,38.5087742 L106.103032,48.5507097 L101.129484,48.5507097 L97.0385161,41.7603871 L92.9088387,48.5507097 L87.8843226,48.5507097 L94.3404516,38.5087742 L89.2630323,38.5087742 L89.2630323,34.4352258 L94.7294839,34.4352258 L94.7294839,30.3597419 L99.2623871,30.3597419 Z M168.351484,0.000129032258 C174.686968,0.000129032258 180.47729,2.58464516 184.623097,6.73625806 C188.772774,10.8891613 191.363742,16.6743226 191.361163,23.0117419 C191.363742,29.3427097 188.772774,35.1330323 184.623097,39.2814194 C180.481161,43.4323871 174.692129,46.0162581 168.363742,46.0162581 L167.089548,46.0162581 L167.089548,33.5433548 L168.351484,33.5433548 C171.281806,33.5433548 173.875355,32.3756129 175.802452,30.460129 C177.716,28.5330323 178.884387,25.9420645 178.889548,23.0117419 C178.884387,20.0820645 177.716,17.4833548 175.802452,15.560129 C173.875355,13.6381935 171.281806,12.4775484 168.351484,12.4698065 L167.089548,12.4698065 L167.089548,0.000129032258 L168.351484,0.000129032258 Z M62.3629032,37.3316774 C56.8816129,37.3316774 57.053871,45.442 62.3629032,45.442 C67.7177419,45.442 67.8467742,37.3316774 62.3629032,37.3316774 Z M121.303161,37.6493548 L117.823806,37.6493548 L117.823806,44.5687097 L121.303161,44.5687097 L121.303161,37.6493548 Z" fill="currentColor" fill-rule="evenodd"/></svg><span>콘텐츠본부 AI 활용 사례</span></a>
+    <nav class="nav" aria-label="메뉴"><a href="#lectures">강의</a><a href="#cases">활용사례</a><a href="#qna">Q&amp;A</a></nav>
+    <div class="top-r">
+      <label class="search"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="q" type="search" placeholder="강의 · 사례 · 질문 검색" aria-label="검색"><kbd>/</kbd></label>
+      <button class="btn" id="theme" type="button">Dark</button>
+      <button class="btn go" id="write" type="button">사례 올리기</button>
+    </div>
+  </div>
+</header>
+<span id="n-lec" hidden></span><span id="n-case" hidden></span><span id="n-qna" hidden></span><div id="filters" hidden></div>
+
+<main class="wrap">
+  <div id="top-area"></div>
+  <div class="layout">
+    <div id="main"></div>
+    <aside class="side" id="side">
+      <section class="box ask" aria-label="AI 도우미에게 묻기">
+        <h2>AI 도우미에게 묻기</h2>
+        <form id="chat-form" class="askbox">
+          <textarea id="chat-in" maxlength="500" placeholder="강의, 사례, Q&amp;A 내용을 물어보세요 (Enter로 보내기)" aria-label="질문"></textarea>
+          <div class="row"><span class="cnt" id="cnt">0/500</span><button class="btn go" type="submit">질문하기 ›</button></div>
+        </form>
+        <p class="hint">이런 게 궁금하다면 눌러서 물어보세요</p>
+        <div class="suggest" id="suggest"></div>
+        <div class="log" id="log" aria-live="polite"></div>
+      </section>
+      <section class="box watch" id="watch"></section>
+    </aside>
+  </div>
+</main>
+
+<div class="modal" id="modal" hidden role="dialog" aria-modal="true"><div class="sheet" id="sheet"></div></div>
+<div class="toast" id="toast" hidden></div>
+
+<button id="fab" hidden></button><div id="chat" hidden></div><button id="chat-x" hidden></button>
+<script>
+const LESSONS=[{"id": "s1", "n": 1, "title": "AI 이해와 도구 고르기", "h": "1.5h", "ph": 1, "goal": "AI가 답을 만드는 방식과 '그럴듯한 오류'를 알고, 채팅형(Claude, ChatGPT)과 에이전트형(Claude Cowork·Claude Code, Codex) 중 내 일을 어디에 맡길지 고른다.", "prep": "Claude 계정과 데스크톱 앱, 사전 설문(AI 활용 설문) 결과, 실습용 폴더 1개(가상 파일 10개 정도)", "plan": [["10분", "설문 결과 공유, 각자 지금 쓰는 방법 한 줄씩"], ["15분", "AI가 답을 만드는 방식(다음 말 이어 붙이기), 그래서 생기는 그럴듯한 오류. 요금제와 회사 자료 입력 원칙"], ["15분", "채팅과 에이전트 비교: 영상은 Gemini, 내 PC 파일 여러 개는 에이전트, 짧은 질문은 채팅"], ["30분", "따라 하기: 같은 질문을 세 번 해서 답 비교 → 같은 폴더 작업을 채팅으로 한 번, 에이전트로 한 번 (아래 그림)"], ["20분", "내 반복 업무 5개를 '채팅 / 에이전트 / 아직 사람'으로 나누기, 공동 과제 소개(예시 페이지 둘러보기)"]], "task": ["내 교과 개념 하나를 \"중학생에게 3문장으로\" 설명하게 하고 틀린 곳 표시하기", "내 반복 업무 5개 분류표. 이 목록이 개인 과제 후보가 됩니다."], "prompt": "이 폴더의 파일 이름을 '단원_번호_제목' 규칙으로 바꾸고, 바꾸기 전·후 이름을 표로 정리해서 같은 폴더에 저장해 줘. 바꾸기 전에 계획을 먼저 보여 줘.", "promptLabel": "에이전트 요청 예", "q": "교정지 PDF 20개를 하나씩 열어 바뀐 목록을 만들고 싶다면 채팅과 에이전트 중 어느 쪽인가요?", "a": "에이전트입니다. 내 컴퓨터의 여러 파일을 직접 열고 결과 파일을 저장해야 하기 때문입니다. 결과는 사람이 원본과 대조합니다.", "img": "img/s02.png", "cap": "채팅으로 할 일, 에이전트에 맡길 일", "links": [["Anthropic Academy AI Fluency (무료 강의)", "https://anthropic.skilljar.com/"], ["Claude 도움말 (Cowork, Claude Code 검색)", "https://support.claude.com/"]]}, {"id": "s2", "n": 2, "title": "업무 실습: 참고서 후속 작업", "h": "2h", "ph": 1, "goal": "엑셀 정리, PDF 요약, PPT·문서 초안, 문제 풀이 중 두 가지를 AI로 끝까지 해 보고, 걸린 시간을 기록한다.", "prep": "문항 목록 메모나 엑셀, 공개 PDF 1개(교육과정 해설 등), 평소에 이 작업에 걸리던 시간", "plan": [["15분", "시연: 흩어진 문항 목록 → 단원·난이도·정답 표 → 엑셀로 내려받기 (아래 그림)"], ["15분", "시연: PDF를 올려 요약하고 PPT 목차 초안 만들기, 한글(HWPX)은 내용을 받아 양식에 붙여 넣는 방법"], ["55분", "각자 실습: 네 가지 중 두 가지를 골라 자기 자료로 진행"], ["20분", "검수: 행 개수, 숫자, 정답을 원본과 대조하고 틀린 곳 기록"], ["15분", "기록 양식 작성: 기존 방법 / AI 방법 / 검토 포함 총시간 / 오류·한계"]], "task": ["두 가지 작업의 결과물과 기록 양식 1장"], "prompt": "위 목록을 [단원, 소단원, 난이도(상/중/하), 정답(①~⑤)] 표로 정리해 줘. 단원 이름은 교과서 목차 표기로 통일하고, 애매한 칸은 '확인 필요'로 써 줘. 엑셀 파일로 줘.", "q": "결과표의 행이 원본보다 하나 적다면 무엇부터 확인하나요?", "a": "원본에서 한 줄에 두 문항이 붙어 있거나 형식이 다른 줄이 있는지 봅니다. 그런 줄을 AI가 합치거나 빠뜨리기 쉽습니다.", "img": "img/s04.png", "cap": "흩어진 문항 목록을 표로 정리하기", "links": [["Claude 도움말 (파일 만들기, 파일 업로드 검색)", "https://support.claude.com/"]]}, {"id": "s3", "n": 3, "title": "교과별 활용", "h": "2h", "ph": 1, "goal": "수식·도형(수학), 그림 설명(과학), 지문·어법 검토(영어·국어), 스캔 글자 읽기를 자기 교과 자료에 써 본다.", "prep": "교과별 자료 한 장씩 (손글씨 수식 사진, 과학 그림, 영어 지문, 국어 예문, 스캔 PDF 1쪽)", "plan": [["20분", "시연 4개: 수식 사진 → LaTeX, 도형 그림 그리기(SVG), 어법 검토표, 스캔 PDF 글자 읽기"], ["15분", "스캔 글자의 한계: 비슷한 숫자·기호(1과 l, 0과 O, −과 –)는 틀릴 수 있어 원본 대조 필수"], ["60분", "교과별 실습 (팀원마다 자기 교과, 팀장이 돌며 도움)"], ["25분", "교과별 결과 5분씩 발표: 잘 된 것 1개, 틀린 것 1개"]], "task": ["수학: 손글씨 풀이 사진을 LaTeX로 옮기고, \"이 삼각형을 SVG로 그려 줘(변의 길이 표시)\"로 도형 만들기", "과학: 실험 장치 그림을 올려 \"중학생용 그림 설명 3줄 + 각 부분 이름\" 받기", "영어: 지문의 어휘 수준 확인, \"중 2 교육과정 기본 어휘 밖 단어\" 목록 뽑기", "국어: 예문의 맞춤법·띄어쓰기를 '원문 / 고친 문장 / 이유' 표로 받기"], "prompt": "다음 예문의 맞춤법과 띄어쓰기를 검토해서 '원문 / 고친 문장 / 이유' 3열 표로 정리해 줘. 확실하지 않으면 '확인 필요'로 표시해 줘.", "q": "AI가 고친 맞춤법이 맞는지 어디서 확인하나요?", "a": "표준국어대사전, 국립국어원 같은 원출처에서 확인합니다.", "img": "img/s05.png", "cap": "교과별 활용: 수식 입력과 어법 검토", "links": []}, {"id": "s4", "n": 4, "title": "프로젝트로 사례 모으기", "h": "1h", "ph": 1, "goal": "Claude '프로젝트'에 지침과 기준 문서를 넣어 두고 반복해서 쓴다. 공동 과제의 사례 카드를 한곳에 모은다.", "prep": "집필 기준·용어 표기 원칙 파일(공개 가능한 범위), 1~3회에 만든 사례 카드", "plan": [["10분", "프로젝트 = 지침 + 파일 + 대화 모음. 대화가 길어져도 기준이 유지되는 이유"], ["15분", "따라 하기: '중등 수학 해설 검수' 프로젝트 만들기, 지침 입력, 파일 올리기, 새 대화에서 검수 요청"], ["25분", "공동 프로젝트 'AI 활용 사례집' 만들기: 카드 양식을 지침에 넣고, 각자 카드를 올려 같은 형식으로 다듬기"], ["10분", "공동 과제 역할 나누기: 내용(카드 정리), 화면(페이지), 챗봇, 검수. 기수 마감일 정하기"]], "task": ["내 교과 프로젝트 1개", "공동 프로젝트에 내 사례 카드 3장 이상"], "prompt": "올린 사례들을 아래 카드 형식으로 정리해 줘.\n[업무] / [도구] / [요청문] / [전후 시간] / [주의점]\n원고나 개인정보로 보이는 내용은 지우고 '삭제함'으로 표시해 줘.", "promptLabel": "사례 정리 요청 예", "q": "프로젝트에 올린 파일은 다른 프로젝트 대화에서도 보일까요?", "a": "아니요. 그 프로젝트 안의 대화에서만 참고합니다.", "img": "img/s06.png", "cap": "프로젝트에 지침과 기준 문서를 저장해 두기", "links": [["Claude 도움말 (Projects 검색)", "https://support.claude.com/"]]}, {"id": "s5", "n": 5, "title": "활용 사례 웹페이지 만들기", "h": "2h", "ph": 2, "goal": "말로 설명해서 'AI 활용 사례' 웹페이지 1차본을 만들고, 고치고, 링크로 공유한다.", "prep": "4회의 사례 카드, 예시 페이지 링크, 페이지에 넣고 싶은 메뉴 목록", "plan": [["15분", "예시 페이지 둘러보기: 시작하기, 업무별 안내, 사례 카드, 의견 남기기, AI 도우미. 우리 페이지 메뉴 정하기"], ["15분", "시연: TF가 만든 'AI 활용 설문' 페이지와 그 요청문 (아래 그림)"], ["50분", "따라 하기: 사례 카드를 붙여 넣고 페이지 만들기 → 말로 고치기 3번 → 휴대폰에서 열어 보기"], ["20분", "내용 담당과 화면 담당이 나눠서 고치기: 카드 문구, 분류(교과·업무), 검색"], ["20분", "서로 써 보고 고칠 점 모으기. 공개 링크에 넣으면 안 되는 것 확인"]], "task": ["사례 페이지 1차본과 공유 링크"], "prompt": "편집자들이 AI 활용 사례를 찾아보는 웹페이지를 만들어 줘. 위에 '시작하기', '업무별 사례', '의견 남기기' 메뉴, 사례는 카드로 보여 주고 교과·업무로 거를 수 있게. 오른쪽 아래에 'AI 도우미' 버튼 자리만 만들어 둬. 휴대폰에서도 보기 좋게. 사례 카드는 아래에 붙여 넣을게.", "q": "공개 링크로 만든 페이지에 미공개 원고를 사례로 넣어도 될까요?", "a": "안 됩니다. 링크를 아는 누구나 볼 수 있습니다. 사례는 가상 자료나 공개 단원으로 바꿔 씁니다.", "img": "img/s07.png", "cap": "말로 설명해서 웹페이지 받기. 오른쪽 미리보기는 실제 페이지입니다.", "links": [["공동 과제 예시 페이지", "https://donga-ai-feedback-hub.baboo84.chatgpt.site/"], ["AI 활용 설문 (실제 페이지)", "https://claude.ai/artifact/G5MMDADv4ixZfANRg3r1Y9"]]}, {"id": "s6", "n": 6, "title": "GitHub로 함께 고치기", "h": "1.5h", "ph": 2, "goal": "공동 페이지를 저장소에 올리고, 각자 맡은 부분을 따로 고친 뒤 합친다. 고친 이력을 보고 되돌릴 수 있다.", "prep": "GitHub 계정, 5회 페이지 파일, 사례 카드를 담은 파일(cases.json 등)", "plan": [["15분", "저장소, 커밋, 브랜치, 합치기(PR)를 편집 업무에 빗대기 (커밋 = 교정 이력 한 줄, 브랜치 = 각자의 교정지)"], ["20분", "따라 하기: 비공개 공동 저장소 만들기 → 페이지와 사례 파일 올리기 → 한 줄 고치고 커밋 → 이력 비교"], ["30분", "역할별 브랜치에서 각자 작업: 내용 담당은 사례 파일, 화면 담당은 페이지. Claude Code에 시키고 바뀐 곳(diff)만 확인"], ["25분", "합치기: PR 열기 → 팀장이 확인 → 합치기. 같은 줄을 둘이 고쳤을 때 해결하는 법"]], "task": ["공동 저장소에 내 커밋 2개, 합쳐진 PR 1개"], "prompt": "이 저장소의 cases.json에 아래 사례 카드 2개를 같은 형식으로 추가하고, 페이지에서 잘 보이는지 확인한 뒤 '사례 2건 추가' 메시지로 커밋해 줘. 바뀐 곳을 먼저 보여 줘.", "promptLabel": "Claude Code 요청 예", "q": "두 사람이 같은 파일을 동시에 고칠 때 브랜치가 왜 필요한가요?", "a": "각자 갈래에서 고친 뒤 확인하고 합치므로 서로의 수정을 덮어쓰지 않습니다.", "img": "img/s08.png", "cap": "GitHub: 고친 이력을 남기고 함께 쓰기", "links": [["GitHub Docs 시작하기", "https://docs.github.com/ko/get-started"]]}, {"id": "s7", "n": 7, "title": "커넥터와 스킬", "h": "1h", "ph": 2, "goal": "커넥터(구글 드라이브 등)를 권한을 확인하며 연결하고, 사례 카드 쓰는 방법을 스킬로 묶어 팀이 같이 쓴다.", "prep": "실습용 구글 드라이브 폴더, 4회의 카드 양식과 지침", "plan": [["10분", "커넥터 = 다른 서비스와의 연결, 스킬 = 일하는 방법 묶음. 읽기 권한과 쓰기 권한의 차이"], ["20분", "따라 하기: 구글 드라이브 연결 → \"사례 폴더의 문서를 카드 형식으로 정리\" 요청 → 연결 끊는 법까지"], ["20분", "스킬 만들기: '사례 카드 쓰기' 스킬로 저장하고, 다른 팀원이 불러 써서 같은 형식이 나오는지 확인"], ["10분", "주의점: 회사/개인 계정 구분, 남이 만든 스킬은 내용을 읽고 설치, 쓰기 권한은 필요할 때만"]], "task": ["드라이브 연결 실습 1회, '사례 카드 쓰기' 스킬 1개"], "prompt": "드라이브의 'AI 사례' 폴더에 있는 문서를 읽고, 각 문서를 사례 카드 형식으로 정리해 표로 보여 줘. 파일은 고치지 말고 읽기만 해.", "q": "드라이브에 '쓰기' 권한을 주면 AI가 무엇을 할 수 있게 되나요?", "a": "파일을 만들고, 고치고, 지울 수 있게 됩니다. 처음에는 읽기만 허용합니다.", "img": "img/s09.png", "cap": "커넥터와 스킬: 연결할 때 권한부터 본다", "links": [["Claude 도움말 (connectors, skills 검색)", "https://support.claude.com/"]]}, {"id": "s8", "n": 8, "title": "API 배우기", "h": "2h", "ph": 3, "goal": "API가 무엇인지, 구독과 요금이 어떻게 다른지 알고, 키를 안전하게 두고 첫 호출을 해 본다. 챗봇의 '엔진'을 미리 시험한다.", "prep": "노트북, TF 공용 API 키(팀장이 한도 설정 후 배포), 사례 파일, 계산기", "plan": [["15분", "API = 프로그램이 AI에게 일을 시키는 창구. 웹페이지 챗봇도 뒤에서는 API를 부른다"], ["15분", "요금: 토큰(주고받은 글의 양) × 모델 단가. 구독료에 API 요금은 포함되지 않음. 챗봇 하루 50회 기준 한 달 비용 어림하기"], ["15분", "콘솔(관리 화면): 키 만들기, 사용량·한도 보기. 키는 환경 변수에 넣고 코드·메신저에 쓰지 않기"], ["45분", "따라 하기: 사례 파일 + 질문을 보내 답 받기 (아래 그림 방식). 코드는 Claude에게 부탁해서 받는다"], ["30분", "답 검토: 사례에 있는 질문, 없는 질문을 3개씩 보내 보고 지어낸 답이 있는지 기록. 작은 모델과 큰 모델 비교"]], "task": ["첫 호출 성공 화면, 질문 6개의 답 검토표, 한 달 비용 어림"], "prompt": "cases.json의 사례 목록과 내 질문을 Claude API에 보내서, 사례 목록 안의 내용으로만 답하게 하는 파이썬 코드를 만들어 줘. 목록에 없으면 '아직 사례가 없어요'라고 답하게 해 줘. API 키는 ANTHROPIC_API_KEY 환경 변수에서 읽어. 작은 모델부터 써 줘.", "q": "API 키가 들어 있는 코드를 메신저로 보냈다면 가장 먼저 할 일은?", "a": "콘솔에서 그 키를 즉시 삭제하고 새로 발급합니다.", "img": "img/s11.png", "cap": "API 첫 호출 예", "links": [["Claude API 시작하기", "https://docs.claude.com/en/docs/get-started"], ["Claude API 요금표", "https://docs.claude.com/en/docs/about-claude/pricing"]]}, {"id": "s9", "n": 9, "title": "웹페이지에 챗봇 넣기", "h": "2h", "ph": 3, "goal": "사례 페이지에 'AI 도우미' 챗봇을 넣어, 사례 목록을 근거로 답하게 하고 키가 드러나지 않게 공개한다.", "prep": "6회 공동 저장소, 8회 코드와 API 키, 배포할 곳(회사 승인 범위 안에서 정함)", "plan": [["15분", "구조: 웹페이지 → 중간 서버 함수(키 보관, 횟수 제한) → AI API (아래 그림). 예시 페이지의 AI 도우미 써 보기"], ["15분", "챗봇 지침 쓰기: 사례 목록 안에서만 답하기, 모르면 모른다고 하고 '의견 남기기'로 안내, 원고·개인정보 넣지 말라는 안내"], ["40분", "따라 하기: Claude Code에게 질문 창과 서버 함수를 만들게 하기. 키는 배포 서비스의 비밀값(환경 변수)에만"], ["30분", "시험: 사례에 있는 질문, 없는 질문, 지침을 무시하라는 질문 각 3개 → 답 기록하고 지침 고치기"], ["20분", "공개 전 점검표: 페이지 코드에 키 없음, 횟수 제한, 월 비용 한도, 공개 범위, 사례 내용 검수"]], "task": ["챗봇이 들어간 사례 페이지, 시험 질문 9개 기록, 공개 전 점검표"], "prompt": "이 저장소의 사례 페이지 오른쪽 아래에 'AI 도우미' 질문 창을 넣어 줘. 질문은 서버 함수로 보내고, 서버 함수가 cases.json과 지침을 붙여 API를 호출하게 해 줘. API 키는 환경 변수에만 두고 페이지 코드에는 절대 넣지 마. 한 사람이 분당 5회, 하루 50회까지만 묻게 제한해 줘. 만들기 전에 파일 구성과 배포 방법을 먼저 설명해 줘.", "promptLabel": "Claude Code 요청 예", "q": "챗봇이 사례에 없는 방법을 그럴듯하게 지어낸다면 어떻게 고치나요?", "a": "지침에 '목록에 없으면 없다고 답하고 의견 남기기로 안내'를 넣고, 사례 목록이 실제로 함께 보내지는지 확인합니다. 고친 뒤 같은 질문으로 다시 시험합니다.", "img": "img/s13.png", "cap": "웹페이지에 챗봇 넣기: 구조", "links": [["공동 과제 예시 페이지", "https://donga-ai-feedback-hub.baboo84.chatgpt.site/"], ["Claude API 시스템 프롬프트 안내", "https://docs.claude.com/en/docs/build-with-claude/prompt-engineering/system-prompts"]]}, {"id": "s10", "n": 10, "title": "반복 업무 자동화", "h": "2h", "ph": 3, "goal": "내 반복 업무 하나를 '트리거 → 처리 → 기록 → 사람 확인' 흐름으로 그리고, 작은 버전을 돌려 본다.", "prep": "1회에 고른 개인 과제 후보, 8회 코드, Make 무료 계정(선택)", "plan": [["15분", "시연: 새 교정지 대조 자동화 흐름 (아래 그림). 도구 고르기: 파일 작업은 Claude Code·Codex, 서비스 연결은 Make 무료(월 1,000단계), Windows PC 작업은 Power Automate Desktop"], ["20분", "각자 자기 업무를 5칸 흐름으로 그리기: 입력, 처리, 출력, 중복 방지, 사람 확인"], ["50분", "Claude Code에게 그 흐름을 설명해 스크립트 만들기 → 파일 3개로 시험"], ["20분", "결과 검토: 틀린 판정, 두 번 처리, 빈 칸이 있는지"], ["15분", "사용법 1쪽 쓰기 (무엇을, 어떻게, 주의점)"]], "task": ["다른 팀원이 사용법 1쪽만 보고 돌려 볼 수 있으면 완료입니다. 이 결과가 개인 과제 산출물이 됩니다."], "prompt": "'새교정지' 폴더에 PDF가 들어오면 '이전교정지' 폴더의 같은 이름 파일과 본문을 비교해서, 바뀐 곳을 [쪽, 이전, 이후, 수정 지시 반영 여부] 표로 시트에 기록하는 스크립트를 만들어 줘. 처리한 파일은 이름 앞에 '완료_'를 붙여 다시 처리하지 않게 해 줘.", "promptLabel": "Claude Code 요청 예", "q": "자동화가 같은 파일을 두 번 처리했다면 어떻게 막나요?", "a": "처리한 파일에 '완료' 표시를 남기고, 완료 표시가 없는 파일만 처리하게 합니다.", "img": "img/s12.png", "cap": "반복 업무 자동화 흐름: 새 교정지 대조", "links": [["Make 요금제", "https://www.make.com/en/pricing"]]}];
+const PH={1:["1개월","기본과 사례 모으기"],2:["2개월","페이지 만들기"],3:["3개월","API와 챗봇"]};
+const PEOPLE={kim:["편집자 A","수학팀","#1d2433"],joo:["편집자 B","초등국어팀","#c2410c"],jung:["편집자 C","중등영어1팀","#0f766e"],kwon:["편집자 D","중고등과학팀","#6d28d9"],lee:["편집자 E","초등수학팀","#be185d"],park:["편집자 F","고등국어팀","#0369a1"]};
+let CASES=[
+  {by:"joo",kind:"팀 교육",subj:"국어",tools:["Claude Opus 5.5"],t:"읽기 지문 수준별 발문 초안",team:"초등국어팀",score:9.6,date:"11.01",
+   sum:"학년과 성취기준을 주고 사실·추론·감상 발문을 나눠 초안을 받았습니다.",before:"지문마다 발문을 처음부터 작성",limit:"성취기준 번호를 틀리게 쓰는 경우가 있어 확인 필요",
+   shot:[["me","초등 4학년 설명문이야. 사실 3개, 추론 4개, 감상 3개로 발문 만들어 줘."],["ai","[사실] 글쓴이가 소개한 곤충의 이름은 무엇인가요?\n[추론] 개미가 줄지어 다니는 까닭은 무엇일까요?"]]},
+  {by:"kim",kind:"개인",subj:"수학",tools:["GPT-6 Astra","Claude Opus 5.5"],t:"단원평가 해설의 계산 오류 찾기",team:"수학팀",score:9.4,date:"10.31",
+   sum:"문항과 해설을 넣고 단계별 검산을 시킨 뒤, 두 모델 결과가 다른 곳만 다시 봤습니다.",before:"해설을 손으로 다시 풀어 확인",limit:"그림이 있는 문항은 읽기가 불안정",
+   shot:[["me","3번 해설을 단계별로 검산해 줘. 틀린 줄이 있으면 표시해 줘."],["ai","4번째 줄에서 2x+6=14를 x=3으로 풀었는데, x=4가 맞습니다."]]},
+  {by:"kwon",kind:"팀 교육",subj:"과학",tools:["Claude Opus 5.5"],t:"교정지 단위·기호 표기 통일 점검",team:"중고등과학팀",score:9.3,date:"10.30",
+   sum:"교정지 PDF와 표기 규칙을 주고, 어긋난 쪽수와 표기를 목록으로 받았습니다.",before:"교정지를 넘기며 눈으로 확인",limit:"수식 이미지 안의 단위는 찾지 못함",
+   shot:[["me","단위는 m/s, kg·m/s² 형식으로 통일이야. 어긋난 곳을 쪽수와 함께 알려줘."],["ai","p.42 ‘m/sec’ → m/s\np.57 ‘kgm/s2’ → kg·m/s²"]]},
+  {by:"jung",kind:"개인",subj:"영어",tools:["GPT-6 Astra"],t:"단원별 어휘 목록과 기본어휘 대조",team:"중등영어1팀",score:9.1,date:"10.29",
+   sum:"단원 어휘 엑셀과 교육과정 기본어휘를 올리고 누락·초과 어휘 표를 받았습니다.",before:"엑셀에서 눈으로 대조",limit:"파생어 처리 기준을 미리 알려줘야 함",
+   shot:[["me","두 파일을 비교해서 기본어휘에 없는 단어만 표로 정리해 줘."],["ai","3단원 sustainable · 기본어휘 외\n5단원 enormous · 기본어휘 외"]]},
+  {by:"lee",kind:"개인",subj:"수학",tools:["Gemini 4 Carbon"],t:"교과서 삽화 대체 텍스트 초안",team:"초등수학팀",score:8.8,date:"10.28",
+   sum:"삽화 이미지를 넣고 시각장애 학생용 대체 텍스트 초안을 받아 다듬었습니다.",before:"삽화마다 직접 설명문 작성",limit:"수량·위치 표현을 꼭 확인해야 함",
+   shot:[["me","이 그림의 대체 텍스트를 40자 안으로 써 줘."],["ai","사과 3개와 배 2개가 접시 위에 놓여 있다."]]},
+  {by:"park",kind:"팀 교육",subj:"국어",tools:["Claude Opus 5.5","Make"],t:"필자 원고 접수 현황 자동 정리",team:"고등국어팀",score:8.9,date:"10.27",
+   sum:"원고 메일이 오면 필자·단원·날짜가 시트에 자동으로 쌓이게 했습니다. 팀 회의에서 함께 만들었습니다.",before:"메일을 열어 목록에 직접 기록",limit:"회사 메일 연동은 승인 필요",
+   shot:[["me","원고 메일이 오면 시트에 필자, 단원, 받은 날짜를 적는 Make 흐름을 알려줘."],["ai","1) Gmail: Watch emails\n2) Sheets: Add a row → 필자, 단원, 날짜"]]}
+];
+let QNA=[
+  {by:"park",t:"회사 원고를 AI에 넣어도 되나요?",date:"11.02",views:42,q:"미공개 원고를 Claude에 넣어서 교정 보조를 받고 싶은데, 회사 기준이 있나요?",
+   ans:[{by:"kim",best:true,a:"회사 승인 범위 안의 자료만 넣고, 미공개 원고는 먼저 팀장과 협의해 주세요. 개인정보가 든 자료는 넣지 않습니다."}]},
+  {by:"lee",t:"수식이 들어간 PDF를 정확히 읽게 하는 방법",date:"11.01",views:31,q:"한글(HWP)에서 만든 PDF라 수식이 깨져 보입니다. 좋은 방법이 있을까요?",
+   ans:[{by:"kim",best:false,a:"수식 부분만 캡처해서 이미지로 넣으면 더 잘 읽습니다. 결과는 원본과 꼭 대조하세요."},{by:"jung",best:false,a:"저는 쪽을 나눠 5쪽씩 넣으니 덜 틀렸어요."}]},
+  {by:"joo",t:"GPT와 Claude 중 발문 만들기에 뭐가 나은가요?",date:"10.31",views:58,q:"두 개 다 써 봤는데 차이를 잘 모르겠어요.",
+   ans:[{by:"kwon",best:true,a:"같은 지문으로 둘 다 시켜 보고 팀에서 고르는 게 제일 확실했어요. 저희 팀은 Claude 결과를 더 많이 골랐습니다."}]},
+  {by:"park",t:"Make 무료 계정으로 몇 번까지 돌릴 수 있나요?",date:"10.30",views:17,q:"팀 원고 정리 흐름을 매일 돌리려고 합니다.",ans:[]},
+  {by:"lee",t:"사례 올릴 때 캡처는 몇 장까지 되나요?",date:"10.29",views:9,q:"",ans:[]}
+];
+
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const av=k=>{const p=PEOPLE[k]||[k,"",'#555'];return `<span class="av" style="background:${p[2]}">${esc(p[0].slice(-1))}</span>`};
+const nm=k=>(PEOPLE[k]||[k])[0];
+const tm=k=>(PEOPLE[k]||[,""])[1];
+const F={case:{kind:new Set(),subj:new Set(),tool:new Set()},qna:"all",lec:0,sort:"new"};
+let view="lectures",detail=null;
+
+function toast(t){const el=$("#toast");el.textContent=t;el.hidden=false;clearTimeout(toast.h);toast.h=setTimeout(()=>el.hidden=true,2400)}
+function q(){return $("#q").value.trim()}
+function counts(){ $("#n-lec").textContent=LESSONS.length;$("#n-case").textContent=CASES.length;$("#n-qna").textContent=QNA.length }
+
+/* 왼쪽 필터 */
+function cb(group,val,n){const on=F.case[group].has(val);return `<label><input type="checkbox" data-g="${group}" value="${esc(val)}" ${on?"checked":""}>${esc(val)}<span>${n}</span></label>`}
+function filters(){
+  let h="";
+  if(view==="cases"){
+    const cnt=(f,v)=>CASES.filter(c=>f(c).includes?f(c).includes(v):f(c)===v).length;
+    h+=`<div class="fgroup"><h4>구분</h4>${["개인","팀 교육"].map(v=>cb("kind",v,CASES.filter(c=>c.kind===v).length)).join("")}</div>`;
+    h+=`<div class="fgroup"><h4>교과</h4>${["국어","수학","영어","과학"].map(v=>cb("subj",v,CASES.filter(c=>c.subj===v).length)).join("")}</div>`;
+    const tools=[...new Set(CASES.flatMap(c=>c.tools))];
+    h+=`<div class="fgroup"><h4>사용 프로그램</h4>${tools.map(v=>cb("tool",v,CASES.filter(c=>c.tools.includes(v)).length)).join("")}</div>`;
+    h+=`<button class="reset" id="reset">필터 초기화</button>`;
+  } else if(view==="lectures"){
+    h+=`<div class="fgroup"><h4>기간</h4>${[[0,"전체"],[1,"1개월"],[2,"2개월"],[3,"3개월"]].map(([v,l])=>`<label><input type="radio" name="ph" value="${v}" ${F.lec==v?"checked":""}>${l}<span>${v?LESSONS.filter(x=>x.ph==v).length:LESSONS.length}</span></label>`).join("")}</div>`;
+  } else {
+    h+=`<div class="fgroup"><h4>상태</h4>${[["all","전체"],["wait","답변 대기"],["done","답변 완료"]].map(([v,l])=>`<label><input type="radio" name="qs" value="${v}" ${F.qna===v?"checked":""}>${l}<span>${v==="all"?QNA.length:QNA.filter(x=>(x.ans.length?"done":"wait")===v).length}</span></label>`).join("")}</div>`;
+  }
+  $("#filters").innerHTML=h;
+}
+$("#filters").addEventListener("change",e=>{const t=e.target;
+  if(t.dataset.g){t.checked?F.case[t.dataset.g].add(t.value):F.case[t.dataset.g].delete(t.value)}
+  if(t.name==="ph")F.lec=+t.value; if(t.name==="qs")F.qna=t.value; draw()});
+$("#filters").addEventListener("click",e=>{if(e.target.id==="reset"){Object.values(F.case).forEach(s=>s.clear());filters();draw()}});
+
+/* 강의 */
+function lecCard(x){return `<button type="button" class="card" data-lec="${x.id}">
+  <div class="thumb">${x.img?`<img src="${x.img}" alt="">`:""}<span class="no">${x.n}회</span></div>
+  <div class="cbody"><div class="tags"><span class="tag blue">${PH[x.ph][0]}</span><span class="tag">${esc(x.h)}</span></div>
+  <h3>${esc(x.title)}</h3><p>${esc(x.goal)}</p>
+  <div class="cfoot"><span>강의</span><span>자세히 →</span></div></div></button>`}
+function lectures(){
+  if(detail)return lessonView(LESSONS.find(x=>x.id===detail));
+  const s=q();let L=LESSONS.filter(x=>(!F.lec||x.ph==F.lec)&&(!s||JSON.stringify(x).includes(s)));
+  let h=`<div class="head"><h1>강의</h1><span class="count">${L.length}개</span><div class="right"><button class="pill ghost" id="add-lec">강의 올리기</button></div></div>`;
+  if(!L.length)return h+`<div class="board" style="padding:40px;text-align:center;color:var(--faint)">찾는 강의가 없습니다.</div>`;
+  [1,2,3].forEach(p=>{const g=L.filter(x=>x.ph==p);if(g.length)h+=`<div class="phase">${PH[p][0]} <span>${PH[p][1]}</span></div><div class="grid">${g.map(lecCard).join("")}</div>`});
+  return h;
+}
+function lessonView(x){
+  const i=LESSONS.indexOf(x),prev=LESSONS[i-1],next=LESSONS[i+1];
+  return `<button class="back" data-back>← 강의 목록</button>
+  <div class="lesson"><div>
+    <div class="panel"><div class="tags"><span class="tag blue">${PH[x.ph][0]} · ${x.n}회</span><span class="tag">${esc(x.h)}</span></div>
+      <h1>${esc(x.title)}</h1><div class="goalbox"><b>목표</b>${esc(x.goal)}</div></div>
+    ${x.img?`<div class="panel"><figure class="fig"><img src="${x.img}" alt="${esc(x.cap)}"><figcaption>${esc(x.cap)}</figcaption></figure></div>`:""}
+    <div class="panel"><h2>진행 순서</h2><table class="plan">${x.plan.map(([a,b])=>`<tr><td>${esc(a)}</td><td>${esc(b)}</td></tr>`).join("")}</table></div>
+    ${x.prompt?`<div class="panel"><h2>${esc(x.promptLabel||"요청 예")}</h2><div class="prompt"><button data-copy>복사</button><span>${esc(x.prompt)}</span></div></div>`:""}
+    <div class="panel"><h2>실습 과제</h2><ul class="clean">${x.task.map(t=>`<li>${esc(t)}</li>`).join("")}</ul></div>
+    ${x.q?`<div class="panel"><h2>확인 질문</h2><div class="qa"><p><b>Q.</b> ${esc(x.q)}</p><p><b>A.</b> ${esc(x.a)}</p></div></div>`:""}
+  </div>
+  <div class="side"><div class="panel"><dl><dt>강사</dt><dd>관리자</dd><dt>시간</dt><dd>${esc(x.h)}</dd><dt>준비물</dt><dd>${esc(x.prep)}</dd>
+    ${x.links&&x.links.length?`<dt>참고 링크</dt><dd>${x.links.map(([t,u])=>`<div><a href="${esc(u)}" target="_blank" rel="noopener">${esc(t)}</a></div>`).join("")}</dd>`:""}</dl></div>
+    <div class="panel" style="display:flex;gap:8px;justify-content:space-between">
+      ${prev?`<button class="pill ghost" data-lec="${prev.id}">← ${prev.n}회</button>`:"<span></span>"}
+      ${next?`<button class="pill" data-lec="${next.id}">${next.n}회 →</button>`:""}</div></div></div>`;
+}
+
+/* 활용사례 */
+const shot=c=>`<div class="chatshot">${c.shot.map(([w,s])=>`<div class="b ${w==="me"?"me":""}">${esc(s)}</div>`).join("")}</div>`;
+function caseCard(c){const i=CASES.indexOf(c);return `<button type="button" class="card" data-case="${i}">
+  <div class="thumb">${c.img?`<img src="${c.img}" alt="">`:shot(c)}</div>
+  <div class="cbody"><div class="who">${av(c.by)}<span>${esc(nm(c.by))} · ${esc(c.team)}</span></div>
+  <h3>${esc(c.t)}</h3>
+  <div class="tags"><span class="tag ${c.kind==="개인"?"blue":"green"}">${esc(c.kind)}</span>${c.tools.map(t=>`<span class="tag">${esc(t)}</span>`).join("")}</div>
+  <div class="cfoot"><span>적용 ${esc(c.team)} · ${esc(c.date)}</span><span class="star">${c.score.toFixed(1)}</span></div></div></button>`}
+function cases(){
+  const s=q(),f=F.case;
+  let C=CASES.filter(c=>(!f.kind.size||f.kind.has(c.kind))&&(!f.subj.size||f.subj.has(c.subj))&&(!f.tool.size||c.tools.some(t=>f.tool.has(t)))&&(!s||JSON.stringify(c).includes(s)));
+  if(F.sort==="score")C=[...C].sort((a,b)=>b.score-a.score);
+  return `<div class="head"><h1>활용사례</h1><span class="count">${C.length}건</span><div class="right">
+    <select class="sort" id="sort" aria-label="정렬"><option value="new" ${F.sort==="new"?"selected":""}>최신순</option><option value="score" ${F.sort==="score"?"selected":""}>만족도순</option></select>
+    <button class="pill" data-write="case">사례 올리기</button></div></div>
+    ${C.length?`<div class="grid">${C.map(caseCard).join("")}</div>`:`<div class="board" style="padding:40px;text-align:center;color:var(--faint)">조건에 맞는 사례가 없습니다.</div>`}`;
+}
+function openCase(i){const c=CASES[i];
+  $("#sheet").className="sheet";
+  $("#sheet").innerHTML=`<button class="x" data-close aria-label="닫기">×</button><div class="thumb">${c.img?`<img src="${c.img}" alt="">`:shot(c)}</div>
+  <div class="sheet-in"><div class="who">${av(c.by)}<span>${esc(nm(c.by))} · ${esc(tm(c.by))} · ${esc(c.date)}</span></div>
+  <h2>${esc(c.t)}</h2>
+  <dl class="detail"><dt>구분</dt><dd>${esc(c.kind)}</dd><dt>사용 프로그램</dt><dd>${c.tools.map(esc).join(", ")}</dd><dt>적용한 팀</dt><dd>${esc(c.team)}</dd>
+  <dt>팀내 만족도</dt><dd class="star">${c.score.toFixed(1)} / 10</dd><dt>기존 방법</dt><dd>${esc(c.before)}</dd><dt>AI 활용 방법</dt><dd>${esc(c.sum)}</dd><dt>오류·한계</dt><dd>${esc(c.limit)}</dd></dl>
+  ${c.img?"":`<p style="color:var(--faint);font-size:12.5px;margin:20px 0 0">위 화면은 캡처 예시입니다. 실제로는 올린 캡처가 보입니다.</p>`}</div>`;
+  $("#modal").hidden=false}
+
+/* Q&A */
+function qna(){
+  if(detail!==null)return postView(QNA[detail]);
+  const s=q();const L=QNA.filter(x=>(F.qna==="all"||(x.ans.length?"done":"wait")===F.qna)&&(!s||JSON.stringify(x).includes(s)));
+  return `<div class="head"><h1>Q&amp;A</h1><span class="count">${L.length}개</span><div class="right"><button class="pill" data-write="qna">질문하기</button></div></div>
+  <div class="board"><div class="brow hd"><span>상태</span><span>제목</span><span class="c3">작성자</span><span>답변</span><span class="c5">날짜</span></div>
+  ${L.map(x=>{const i=QNA.indexOf(x),d=x.ans.length;return `<button type="button" class="brow" data-post="${i}"><span class="status ${d?"done":"wait"}">${d?"답변 완료":"답변 대기"}</span>
+    <span class="t">${esc(x.t)}</span><span class="c3 n">${esc(nm(x.by))} · ${esc(tm(x.by))}</span><span class="n">${d}</span><span class="c5 n">${esc(x.date)}</span></button>`}).join("")||`<div style="padding:40px;text-align:center;color:var(--faint)">질문이 없습니다.</div>`}</div>`;
+}
+function postView(x){const i=QNA.indexOf(x);
+  const best=x.ans.filter(a=>a.best),rest=x.ans.filter(a=>!a.best);
+  return `<button class="back" data-back>← Q&amp;A 목록</button><div class="panel post" style="max-width:860px">
+  <span class="status ${x.ans.length?"done":"wait"}">${x.ans.length?"답변 완료":"답변 대기"}</span>
+  <h1>${esc(x.t)}</h1><div class="meta">${esc(nm(x.by))} · ${esc(tm(x.by))} · ${esc(x.date)} · 조회 ${x.views}</div>
+  ${x.q?`<div class="q">${esc(x.q)}</div>`:""}
+  ${best.map(a=>`<div class="ans best"><div class="lbl">채택된 답변</div><div class="who">${av(a.by)}<span>${esc(nm(a.by))} · ${esc(tm(a.by))}</span></div><p>${esc(a.a)}</p></div>`).join("")}
+  <div style="margin-top:20px;font-weight:700">답변 ${x.ans.length}</div>
+  ${rest.map(a=>`<div class="ans"><div class="who">${av(a.by)}<span>${esc(nm(a.by))} · ${esc(tm(a.by))}</span></div><p>${esc(a.a)}</p></div>`).join("")}
+  <form class="reply" data-reply="${i}"><textarea id="reply-in" placeholder="답변을 남겨 주세요" aria-label="답변"></textarea><button class="pill" type="submit">등록</button></form></div>`;
+}
+
+/* 글쓰기 */
+function openWrite(kind){
+  $("#sheet").className="sheet sm";
+  const body=kind==="case"?`<h2>사례 올리기</h2>
+    <label>제목<input id="w-t" required placeholder="예: 교정지 표기 통일 점검"></label>
+    <div class="two"><label>구분<select id="w-kind"><option>개인</option><option>팀 교육</option></select></label>
+    <label>교과<select id="w-subj"><option>국어</option><option>수학</option><option>영어</option><option>과학</option></select></label></div>
+    <div class="two"><label>사용 프로그램<input id="w-tools" placeholder="예: GPT-6 Astra, Claude Opus 5.5"></label>
+    <label>적용한 팀<input id="w-team" placeholder="예: 국어팀"></label></div>
+    <label>팀내 만족도 (10점)<input id="w-score" type="number" min="0" max="10" step="0.1" value="9.0"></label>
+    <label>자세한 내용<textarea id="w-sum" placeholder="어떤 일을, 어떻게 맡겼는지"></textarea></label>
+    <label>캡처<input id="w-img" type="file" accept="image/*"></label>`
+    :`<h2>질문하기</h2><label>제목<input id="w-t" required placeholder="궁금한 점을 한 줄로"></label><label>내용<textarea id="w-q"></textarea></label>`;
+  $("#sheet").innerHTML=`<button class="x" data-close aria-label="닫기">×</button><form class="sheet-in form" id="wform" data-kind="${kind}">${body}
+    <p style="margin:0;color:var(--faint);font-size:12.5px">목업이라 새로고침하면 사라집니다.</p>
+    <div class="act"><button type="button" class="pill ghost" data-close>취소</button><button class="pill" type="submit">올리기</button></div></form>`;
+  $("#modal").hidden=false;$("#w-t").focus();
+}
+document.addEventListener("submit",e=>{
+  if(e.target.id==="wform"){e.preventDefault();const k=e.target.dataset.kind;
+    if(k==="case"){const file=$("#w-img").files[0];
+      const add=img=>{CASES.unshift({by:"kim",kind:$("#w-kind").value,subj:$("#w-subj").value,tools:($("#w-tools").value||"Claude Opus 5.5").split(",").map(s=>s.trim()).filter(Boolean),
+        t:$("#w-t").value,team:$("#w-team").value||"수학팀",score:+$("#w-score").value||0,date:"11.02",sum:$("#w-sum").value,before:"-",limit:"-",img,shot:[["me","(캡처 없음)"]]});
+        close();go("cases");toast("사례를 올렸습니다")};
+      if(file){const r=new FileReader();r.onload=()=>add(r.result);r.readAsDataURL(file)}else add(null);
+    } else {QNA.unshift({by:"kim",t:$("#w-t").value,date:"11.02",views:0,q:$("#w-q").value,ans:[]});close();go("qna");toast("질문을 올렸습니다")}
+  }
+  if(e.target.dataset.reply!==undefined){e.preventDefault();const v=$("#reply-in").value.trim();if(!v)return;
+    QNA[+e.target.dataset.reply].ans.push({by:"kim",best:false,a:v});draw();toast("답변을 등록했습니다")}
+});
+
+/* 화면 전환 */
+function close(){$("#modal").hidden=true}
+function draw(){counts();filters();
+  $("#main").innerHTML=view==="lectures"?lectures():view==="cases"?cases():qna();
+  $("#write").textContent=view==="qna"?"질문하기":"사례 올리기";
+  document.querySelectorAll(".menu a").forEach(a=>a.getAttribute("href")==="#"+view?a.setAttribute("aria-current","page"):a.removeAttribute("aria-current"));
+  const s=$("#sort");if(s)s.onchange=()=>{F.sort=s.value;draw()};}
+function go(v){if(location.hash!=="#"+v)location.hash=v;else{view=v;detail=null;draw()}}
+function route(){const h=location.hash.slice(1);view=["lectures","cases","qna"].includes(h)?h:"lectures";detail=null;draw();window.scrollTo(0,0)}
+addEventListener("hashchange",()=>route());
+$("#q").addEventListener("input",()=>{detail=null;draw()});
+$("#write").addEventListener("click",()=>openWrite(view==="qna"?"qna":"case"));
+document.addEventListener("click",e=>{const t=e.target.closest("[data-lec],[data-case],[data-post],[data-back],[data-close],[data-write],[data-copy],#add-lec");if(!t){if(e.target.id==="modal")close();return}
+  if(t.dataset.lec){view="lectures";detail=t.dataset.lec;draw();window.scrollTo(0,0)}
+  else if(t.dataset.case!==undefined)openCase(+t.dataset.case);
+  else if(t.dataset.post!==undefined){detail=+t.dataset.post;QNA[detail].views++;draw();window.scrollTo(0,0)}
+  else if(t.hasAttribute("data-back")){detail=null;draw()}
+  else if(t.hasAttribute("data-close"))close();
+  else if(t.dataset.write)openWrite(t.dataset.write);
+  else if(t.hasAttribute("data-copy")){const txt=t.nextElementSibling.textContent;navigator.clipboard?.writeText(txt).then(()=>toast("복사했습니다"),()=>toast("복사가 막혀 있어요. 직접 선택해 복사해 주세요"))}
+  else if(t.id==="add-lec")toast("강의 올리기는 강사(관리자)만 보입니다. 목업이라 화면만 있습니다")});
+addEventListener("keydown",e=>{if(e.key==="Escape")close()});
+
+/* 챗봇: 지금은 예시 답변. API 연결 시 reply()만 교체 */
+const log=$("#log");
+function say(t,w,src){const d=document.createElement("div");d.className="msg "+w;d.textContent=t;if(src){const s=document.createElement("span");s.className="src";s.textContent="출처: "+src;d.appendChild(s)}log.appendChild(d);log.scrollTop=log.scrollHeight}
+function reply(s){
+  const L=LESSONS.find(x=>s.includes(x.title.split(" ")[0])&&x.title.split(" ")[0].length>1);
+  if(/강의|교육|회차/.test(s)&&!L)return["강의는 10회입니다. 1회 ‘AI 이해와 도구 고르기’부터 10회 ‘반복 업무 자동화’까지 있습니다.","강의"];
+  if(L)return[`${L.n}회 ‘${L.title}’ 강의입니다. 목표: ${L.goal}`,`강의 · ${L.n}회`];
+  const c=CASES.find(x=>s.includes(x.subj)||x.t.split(" ").some(w=>w.length>1&&s.includes(w)));
+  if(c)return[`‘${c.t}’ 사례가 있습니다. ${c.sum} ${c.team}에 적용했고 팀내 만족도는 ${c.score}점입니다.`,`활용사례 · ${nm(c.by)}`];
+  const p=QNA.find(x=>x.t.split(" ").some(w=>w.length>1&&s.includes(w)));
+  if(p&&p.ans[0])return[p.ans[0].a,`Q&A · ${p.t}`];
+  return["예시 답변입니다. API를 연결하면 강의·사례·Q&A를 찾아 답합니다.",null]}
+["해설 검산 사례","API 배우기 강의","원고를 AI에 넣어도 되나요"].forEach(t=>{const b=document.createElement("button");b.type="button";b.textContent=t;b.onclick=()=>ask(t);$("#suggest").appendChild(b)});
+function ask(s){say(s,"me");setTimeout(()=>{const[r,src]=reply(s);say(r,"bot",src)},400)}
+say("안녕하세요. 강의, 활용사례, Q&A 내용을 물어보세요.","bot");
+$("#chat-form").addEventListener("submit",e=>{e.preventDefault();const v=$("#chat-in").value.trim();if(!v)return;$("#chat-in").value="";ask(v)});
+function toggle(o){$("#chat").hidden=!o;$("#fab").setAttribute("aria-expanded",o);if(o)$("#chat-in").focus()}
+$("#fab").addEventListener("click",()=>toggle($("#chat").hidden));
+$("#chat-x").addEventListener("click",()=>toggle(false));
+
+
+/* ===== B안: 뉴스 브리핑형 ===== */
+Object.values(PEOPLE).forEach((p,i)=>p[2]=["#1f2329","#4b5058","#6b7079"][i%3]);
+const VIEWS_L=[128,96,88,74,70,52,61,40,47,33];
+LESSONS.forEach((x,i)=>x.views=VIEWS_L[i]||20);
+const G={feat:{lectures:"new",cases:"hot",qna:"hot"},lph:"",lh:"",kind:"",subj:"",tool:"",csort:"new",qs:"",qsort:"new",kw:"",all:false};
+
+/* 좋아요: 지금은 이 브라우저에만 기억. 실제 버전은 공용 저장소로 */
+const LIKE_L=[42,35,31,27,24,18,21,12,15,9], LIKE_C=[38,31,29,22,17,19];
+LESSONS.forEach((x,i)=>x.likes=LIKE_L[i]||5);
+CASES.forEach((c,i)=>c.likes=LIKE_C[i]||3);
+let MYLIKES=new Set();
+try{MYLIKES=new Set(JSON.parse(localStorage.getItem("likes")||"[]"))}catch(e){}
+const likeKey=(t,id)=>t+":"+id;
+const likeN=(t,id,base)=>base+(MYLIKES.has(likeKey(t,id))?1:0);
+const lecLikes=x=>likeN("l",x.id,x.likes);
+const caseLikes=c=>likeN("c",CASES.indexOf(c),c.likes);
+function likeBtn(t,id,base){const k=likeKey(t,id),on=MYLIKES.has(k);return `<span class="like" role="button" tabindex="0" data-like="${k}" data-base="${base}" aria-pressed="${on}" aria-label="좋아요">${base+(on?1:0)}</span>`}
+const lecLike=x=>likeBtn("l",x.id,x.likes);
+const caseLike=c=>likeBtn("c",CASES.indexOf(c),c.likes);
+function toggleLike(el){const k=el.dataset.like;MYLIKES.has(k)?MYLIKES.delete(k):MYLIKES.add(k);
+  try{localStorage.setItem("likes",JSON.stringify([...MYLIKES]))}catch(e){}
+  document.querySelectorAll(`[data-like="${k}"]`).forEach(b=>{const on=MYLIKES.has(k);b.setAttribute("aria-pressed",on);b.textContent=(+b.dataset.base)+(on?1:0);b.classList.remove("pop");void b.offsetWidth;if(on)b.classList.add("pop")})}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-like]");if(!b)return;e.stopPropagation();e.preventDefault();toggleLike(b)},true);
+document.addEventListener("keydown",e=>{const b=e.target.closest&&e.target.closest("[data-like]");if(b&&(e.key==="Enter"||e.key===" ")){e.preventDefault();e.stopPropagation();toggleLike(b)}},true);
+const _lessonView=lessonView;
+lessonView=function(x){return _lessonView(x).replace("</h1>",`</h1><div style="margin:-2px 0 14px">${lecLike(x)}</div>`)};
+const _openCase=openCase;
+openCase=function(i){_openCase(i);const h=document.querySelector("#sheet .sheet-in h2");if(h)h.insertAdjacentHTML("afterend",`<div style="margin:-6px 0 16px">${caseLike(CASES[i])}</div>`)};
+const TREND={lectures:["에이전트","프로젝트","GitHub","API","챗봇","자동화"],qna:["원고","수식","Make","GPT","캡처"]};
+const pad=n=>String(n).padStart(2,"0");
+const seg=(label,key,opts)=>`<div class="seg"><span>${label}</span>${opts.map(([v,l])=>`<button type="button" data-seg="${key}" data-v="${esc(v)}" aria-pressed="${G[key]===v}">${esc(l)}</button>`).join("")}</div>`;
+const dots=(v,max=10)=>{const on=Math.round(v/max*5);return `<span class="dots">${[0,1,2,3,4].map(i=>`<i class="${i<on?"on":""}"></i>`).join("")}</span>`};
+function srch(){return (q()||G.kw)}
+
+function heroBar(title,opts){const n=6;return `<div class="hero-bar"><h2>${title}</h2>${opts.length?`<div class="toggle" role="group">`:""}${opts.map(([v,l])=>`<button type="button" data-feat="${v}" aria-pressed="${G.feat[view]===v}">${l}</button>`).join("")}${opts.length?`</div>`:""}
+  <div class="ctr"><span id="pos">01 / ${pad(document.querySelectorAll?(view==="lectures"?NEWS.length:6):6)}</span><button type="button" data-scroll="-1" aria-label="이전">←</button><button type="button" data-scroll="1" aria-label="다음">→</button></div></div>`}
+function trend(words){return `<div class="trend"><span>많이 찾는 키워드</span>${words.map(([w,c])=>`<button type="button" class="kw" data-kw="${esc(w)}" aria-pressed="${G.kw===w}">${esc(w)}${c?`<small>${c}</small>`:""}</button>`).join("")}</div>`}
+
+/* 강의 */
+const NEWS=[
+  {id:"n1",co:"Anthropic",model:"Claude Opus 5.5",state:"새 버전",date:"2026.11",t:"Claude Opus 5.5, 더 똑똑해졌다",tag:"똑똑함",
+   sum:"깊게 생각해야 하는 일에 강해졌습니다. 긴 문서를 읽고 따져 보는 작업에 잘 맞습니다.",
+   body:["Anthropic의 새 모델 Claude Opus 5.5가 나왔습니다. 여러 단계를 거쳐 따져 봐야 하는 일, 긴 자료를 끝까지 읽고 정리하는 일에서 이전보다 더 정확해졌습니다.","대신 가벼운 모델보다 느리고 비용이 더 듭니다. 짧은 질문이나 단순 반복 작업에는 가벼운 모델이 낫습니다."],
+   use:"해설 검산, 긴 교정지 대조, 원고 구조 검토처럼 정확도가 중요한 일",lec:"s1"},
+  {id:"n2",co:"OpenAI",model:"GPT-6.1 Terra",state:"새 버전",date:"2026.11",t:"GPT-6.1 Terra, 싸고 빠르다",tag:"저렴 · 빠름",
+   sum:"가볍고 빠른 모델이라 반복 작업을 많이 돌려도 비용 부담이 적습니다.",
+   body:["OpenAI의 GPT-6.1 Terra는 값이 싸고 답이 빠른 모델입니다. 같은 일을 여러 번 돌리거나 양이 많은 자료를 처리할 때 부담이 적습니다.","어려운 추론이 필요한 일은 상위 모델에 맡기고, 정리·분류처럼 단순한 일에 쓰는 것이 좋습니다."],
+   use:"어휘·문항 목록 정리, 표기 통일 점검처럼 양이 많은 반복 작업",lec:"s2"},
+  {id:"n3",co:"Google",model:"Gemini 4 Carbon",state:"출시 예정",date:"출시일 미정",t:"Gemini 4 Carbon 출시 예정",tag:"출시 예정",
+   sum:"출시 일정이 발표되면 이곳에 바로 정리합니다.",
+   body:["Google의 다음 모델 Gemini 4 Carbon이 출시를 앞두고 있습니다. 정확한 출시일과 기능은 발표되는 대로 업데이트합니다.","출시 후 직접 써 보고, Claude·ChatGPT와 같은 과제로 비교한 결과를 활용사례에 올리겠습니다."],
+   use:"출시 후 비교 결과 공유 예정",lec:"s1"}
+];
+function lecTop(){
+  return heroBar("최신 AI 소식",[])+`<div class="strip" id="strip">${NEWS.map((n,i)=>`<button type="button" class="hero" data-news="${n.id}"><div>
+    <span class="num">${pad(i+1)}</span><div class="lbl"><b>${esc(n.co)}</b><span class="lab ${n.state==="출시 예정"?"orange":""}">${esc(n.state)}</span><span>· ${esc(n.date)}</span></div>
+    <h3><span class="hl">${esc(n.t)}</span></h3><p class="sum">${esc(n.sum)}</p>
+    <div class="metaline"><span>편집 업무에서는: ${esc(n.use)}</span></div></div>
+    <div class="art modelart"><small>${esc(n.co)}</small><strong>${esc(n.model)}</strong><span class="lab ${n.state==="출시 예정"?"orange":""}">${esc(n.tag)}</span></div></button>`).join("")}</div>`+`<div style="height:28px"></div>`;
+}
+function openNews(id){const n=NEWS.find(x=>x.id===id),L=LESSONS.find(x=>x.id===n.lec);
+  $("#sheet").className="sheet sm";
+  $("#sheet").innerHTML=`<button class="x" data-close aria-label="닫기">×</button><div class="sheet-in">
+    <div style="display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--sub)"><b style="color:var(--ink)">${esc(n.co)}</b><span class="lab ${n.state==="출시 예정"?"orange":""}">${esc(n.state)}</span><span>${esc(n.date)}</span></div>
+    <h2>${esc(n.t)}</h2>${n.body.map(p=>`<p style="margin:0 0 12px;font-size:15px">${esc(p)}</p>`).join("")}
+    <div class="goalbox" style="margin-top:16px"><b>편집 업무에서는</b>${esc(n.use)}</div>
+    ${L?`<p style="margin:16px 0 0;font-size:13.5px;color:var(--sub)">관련 강의: <a href="#lectures" data-lec="${L.id}">${L.n}회 ${esc(L.title)}</a></p>`:""}</div>`;
+  $("#modal").hidden=false}
+document.addEventListener("click",e=>{const n=e.target.closest("[data-news]");if(n)openNews(n.dataset.news);if(e.target.closest("#sheet [data-lec]")){e.preventDefault();$("#modal").hidden=true}});
+function lectures(){
+  if(detail)return lessonView(LESSONS.find(x=>x.id===detail));
+  const s=srch();
+  const L=LESSONS.filter(x=>(!G.lph||x.ph==G.lph)&&(!G.lh||x.h===G.lh)&&(!s||JSON.stringify(x).includes(s)));
+  return `<div class="box table"><div class="table-h"><h2>전체 강의</h2><div class="r"><span>${L.length}개 표시</span><button class="pill ghost" id="add-lec" type="button">강의 올리기</button></div></div>
+  <div class="tr hd cols-lec"><span>#</span><span>기간</span><span>강의 및 목표</span><span>시간</span><span>조회</span><span>좋아요</span></div>
+  ${L.map(x=>`<button type="button" class="tr cols-lec" data-lec="${x.id}"><span class="n">${pad(x.n)}</span><span class="lab">${PH[x.ph][0]}</span>
+    <div class="mid"><h3>${esc(x.title)}</h3><p>${esc(x.goal)}</p><div class="sm"><span>강사</span><span>· 실습 ${x.task.length}개</span>${x.links.length?`<span class="tag">참고 링크 ${x.links.length}</span>`:""}</div></div>
+    <span class="v mono">${esc(x.h)}</span><span class="v mono">${x.views}</span><span>${lecLike(x)}</span></button>`).join("")||`<div class="empty">찾는 강의가 없습니다.</div>`}</div>`;
+}
+
+/* 활용사례 */
+function caseTop(){
+  const top=[...CASES].sort((a,b)=>G.feat.cases==="hot"?caseLikes(b)-caseLikes(a):b.date.localeCompare(a.date)).slice(0,6);
+  const tools=[...new Set(CASES.flatMap(c=>c.tools))];
+  return heroBar(G.feat.cases==="hot"?"좋아요를 많이 받은 사례":"새로 올라온 사례",[["hot","인기"],["new","최신"]])+
+  `<div class="strip" id="strip">${top.map((c,i)=>`<button type="button" class="hero" data-case="${CASES.indexOf(c)}"><div>
+    <span class="num">${pad(i+1)}</span><div class="lbl"><b>${G.feat.cases==="hot"?"인기 사례":"최신 사례"}</b><span>· ${esc(c.subj)}</span><span class="tag ${c.kind==="개인"?"":"green"}">${esc(c.kind)}</span></div>
+    <h3><span class="hl">${esc(c.t)}</span></h3><p class="sum">${esc(c.sum)}</p>
+    <div class="tags">${c.tools.map(t=>`<span class="tag">${esc(t)}</span>`).join("")}</div>
+    <div class="metaline">${av(c.by)}<span>${esc(nm(c.by))} · ${esc(c.team)}</span><span>· ${esc(c.date)}</span><span class="star">${c.score.toFixed(1)}</span>${caseLike(c)}</div></div>
+    <div class="art">${c.img?`<img src="${c.img}" alt="">`:shot(c)}</div></button>`).join("")}</div>`+
+  trend(tools.map(t=>[t,CASES.filter(c=>c.tools.includes(t)).length]).concat(["국어","수학","영어","과학"].map(s=>[s,CASES.filter(c=>c.subj===s).length])));
+}
+function cases(){
+  const s=srch();
+  let C=CASES.filter(c=>(!G.kind||c.kind===G.kind)&&(!G.subj||c.subj===G.subj)&&(!G.tool||c.tools.includes(G.tool))&&(!s||JSON.stringify(c).includes(s)));
+  if(G.csort==="score")C=[...C].sort((a,b)=>b.score-a.score);
+  if(G.csort==="likes")C=[...C].sort((a,b)=>caseLikes(b)-caseLikes(a));
+  const tools=[...new Set(CASES.flatMap(c=>c.tools))];
+  const shown=G.all?C:C.slice(0,8);
+  return `<div class="box filters">${seg("구분","kind",[["","전체"],["개인","개인"],["팀 교육","팀 교육"]])}${seg("교과","subj",[["","전체"],["국어","국어"],["수학","수학"],["영어","영어"],["과학","과학"]])}
+    ${seg("프로그램","tool",[["","전체"]].concat(tools.map(t=>[t,t])))}${seg("정렬","csort",[["new","최신"],["likes","좋아요"],["score","만족도"]])}</div>
+  <div class="box table"><div class="table-h"><h2>전체 사례</h2><div class="r"><span>${shown.length}건 표시 · 전체 ${C.length}건</span><button class="pill" data-write="case" type="button">사례 올리기</button></div></div>
+  <div class="tr hd cols-case"><span>#</span><span>교과</span><span>사례 및 내용</span><span>적용한 팀</span><span>팀내 만족도</span><span>좋아요</span></div>
+  ${shown.map((c,i)=>`<button type="button" class="tr cols-case" data-case="${CASES.indexOf(c)}"><span class="n">${pad(i+1)}</span><span class="lab gray">${esc(c.subj)}</span>
+    <div class="mid"><h3>${esc(c.t)}</h3><p>${esc(c.sum)}</p><div class="sm">${av(c.by)}<span>${esc(nm(c.by))}</span><span>· ${esc(c.date)}</span><span class="tag ${c.kind==="개인"?"":"green"}">${esc(c.kind)}</span>${c.tools.map(t=>`<span class="tag">${esc(t)}</span>`).join("")}</div></div>
+    <span class="v">${esc(c.team)}</span><span class="v"><span class="star">${c.score.toFixed(1)}</span>${dots(c.score)}</span><span>${caseLike(c)}</span></button>`).join("")||`<div class="empty">조건에 맞는 사례가 없습니다.</div>`}
+  ${C.length>shown.length?`<button class="more" data-all type="button">전체 ${C.length}건 보기 →</button>`:""}</div>`;
+}
+
+/* Q&A */
+function qnaTop(){
+  const top=[...QNA].sort((a,b)=>G.feat.qna==="hot"?b.views-a.views:b.date.localeCompare(a.date)).slice(0,6);
+  return heroBar(G.feat.qna==="hot"?"많이 본 질문":"새로 올라온 질문",[["hot","인기"],["new","최신"]])+
+  `<div class="strip" id="strip">${top.map((x,i)=>{const a=x.ans.find(a=>a.best)||x.ans[0];return `<button type="button" class="hero" data-post="${QNA.indexOf(x)}"><div>
+    <span class="num">${pad(i+1)}</span><div class="lbl"><b>Q&amp;A</b><span class="status ${x.ans.length?"done":"wait"}">${x.ans.length?"답변 "+x.ans.length:"답변 대기"}</span></div>
+    <h3><span class="hl">${esc(x.t)}</span></h3><p class="sum">${esc(x.q||"내용 없음")}</p>
+    <div class="metaline">${av(x.by)}<span>${esc(nm(x.by))} · ${esc(tm(x.by))}</span><span>· ${esc(x.date)}</span><span>· 조회 ${x.views}</span></div></div>
+    <div class="art"><div class="ansbox">${a?`<b>${a.best?"채택된 답변":"첫 답변"} · ${esc(nm(a.by))}</b><span>${esc(a.a)}</span>`:`<b>아직 답변이 없습니다</b><span>먼저 답해 주세요.</span>`}</div></div></button>`}).join("")}</div>`+
+  trend(TREND.qna.map(w=>[w,QNA.filter(x=>JSON.stringify(x).includes(w)).length]));
+}
+function qna(){
+  if(detail!==null)return postView(QNA[detail]);
+  const s=srch();
+  let L=QNA.filter(x=>(!G.qs||(x.ans.length?"done":"wait")===G.qs)&&(!s||JSON.stringify(x).includes(s)));
+  if(G.qsort==="views")L=[...L].sort((a,b)=>b.views-a.views);
+  return `<div class="box filters">${seg("상태","qs",[["","전체"],["wait","답변 대기"],["done","답변 완료"]])}${seg("정렬","qsort",[["new","최신"],["views","조회순"]])}</div>
+  <div class="box table"><div class="table-h"><h2>전체 질문</h2><div class="r"><span>${L.length}개 표시</span><button class="pill" data-write="qna" type="button">질문하기</button></div></div>
+  <div class="tr hd cols-qna"><span>#</span><span>상태</span><span>질문</span><span>작성자</span><span>답변</span><span>조회</span></div>
+  ${L.map((x,i)=>`<button type="button" class="tr cols-qna" data-post="${QNA.indexOf(x)}"><span class="n">${pad(i+1)}</span><span class="status ${x.ans.length?"done":"wait"}">${x.ans.length?"답변 완료":"답변 대기"}</span>
+    <div class="mid"><h3>${esc(x.t)}</h3><p>${esc(x.q||"")}</p></div><span class="v">${esc(nm(x.by))}<br><small style="color:var(--faint)">${esc(tm(x.by))}</small></span>
+    <span class="v mono">${x.ans.length}</span><span class="v mono">${x.views}</span></button>`).join("")||`<div class="empty">질문이 없습니다.</div>`}</div>`;
+}
+
+/* 오른쪽 아래 목록 */
+function watch(){
+  if(view==="qna"){const t=[...LESSONS].sort((a,b)=>b.views-a.views).slice(0,4);
+    return `<div class="watch-h"><h2>많이 본 강의</h2><span>조회순</span></div>${t.map((x,i)=>`<button type="button" class="wi" data-golec="${x.id}"><span class="k">${i+1}</span><span><b>${esc(x.title)}</b><small>${x.n}회 · ${esc(x.h)} · 조회 ${x.views}</small></span></button>`).join("")}`}
+  const t=[...QNA].sort((a,b)=>b.views-a.views).slice(0,4);
+  return `<div class="watch-h"><h2>많이 본 질문</h2><span>Q&amp;A</span></div>${t.map((x,i)=>`<button type="button" class="wi" data-gopost="${QNA.indexOf(x)}"><span class="k">${i+1}</span><span><b>${esc(x.t)}</b><small>답변 ${x.ans.length} · 조회 ${x.views}</small></span></button>`).join("")}`;
+}
+
+function counts(){} function filters(){}
+function draw(){
+  const isDetail=(view==="lectures"&&detail)||(view==="qna"&&detail!==null);
+  $("#top-area").innerHTML=isDetail?"":view==="lectures"?lecTop():view==="cases"?caseTop():qnaTop();
+  $("#main").innerHTML=view==="lectures"?lectures():view==="cases"?cases():qna();
+  $("#watch").innerHTML=watch();
+  $("#write").textContent=view==="qna"?"질문하기":"사례 올리기";
+  document.querySelectorAll(".nav a").forEach(a=>a.getAttribute("href")==="#"+view?a.setAttribute("aria-current","page"):a.removeAttribute("aria-current"));
+  const st=$("#strip");if(st)st.onscroll=()=>{const w=st.firstElementChild?.offsetWidth+16||1;$("#pos").textContent=pad(Math.round(st.scrollLeft/w)+1)+" / "+pad(st.children.length)};
+}
+let skipRoute=false;
+const _route=route;
+route=function(){if(skipRoute){skipRoute=false;return}G.kw="";G.all=false;_route()};
+function jump(v,d){view=v;detail=d;if(location.hash!=="#"+v){skipRoute=true;location.hash=v}draw();window.scrollTo(0,0)}
+document.addEventListener("click",e=>{
+  const t=e.target.closest("[data-scroll],[data-feat],[data-seg],[data-kw],[data-all],[data-golec],[data-gopost]");if(!t)return;
+  if(t.dataset.scroll){const st=$("#strip");st.scrollBy({left:st.clientWidth*0.92*(+t.dataset.scroll),behavior:matchMedia("(prefers-reduced-motion:reduce)").matches?"auto":"smooth"})}
+  else if(t.dataset.feat){G.feat[view]=t.dataset.feat;draw()}
+  else if(t.dataset.seg){G[t.dataset.seg]=t.dataset.v;G.all=false;draw()}
+  else if(t.dataset.kw){G.kw=G.kw===t.dataset.kw?"":t.dataset.kw;draw()}
+  else if(t.hasAttribute("data-all")){G.all=true;draw()}
+  else if(t.dataset.golec)jump("lectures",t.dataset.golec);
+  else if(t.dataset.gopost!==undefined){QNA[+t.dataset.gopost].views++;jump("qna",+t.dataset.gopost)}
+});
+/* 테마 버튼 */
+const isDark=()=>document.documentElement.dataset.theme?document.documentElement.dataset.theme==="dark":matchMedia("(prefers-color-scheme: dark)").matches;
+function themeLabel(){$("#theme").textContent=isDark()?"Light":"Dark"}
+$("#theme").addEventListener("click",()=>{document.documentElement.dataset.theme=isDark()?"light":"dark";themeLabel()});
+themeLabel();
+/* 검색 단축키 / */
+addEventListener("keydown",e=>{if(e.key==="/"&&!/INPUT|TEXTAREA/.test(document.activeElement.tagName)){e.preventDefault();$("#q").focus()}});
+/* AI 질문 칸 */
+$("#log").innerHTML="";$("#suggest").innerHTML="";
+["해설 검산 사례가 있나요?","API 배우기 강의는 언제?","원고를 AI에 넣어도 되나요?","Make 쓰는 사례"].forEach(t=>{const b=document.createElement("button");b.type="button";b.textContent=t;b.onclick=()=>ask(t);$("#suggest").appendChild(b)});
+$("#chat-in").addEventListener("input",e=>{$("#cnt").textContent=e.target.value.length+"/500"});
+$("#chat-in").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();$("#chat-form").requestSubmit()}});
+$("#chat-form").addEventListener("submit",()=>setTimeout(()=>{$("#cnt").textContent="0/500"},0));
+
+/* ===== AI 도우미: Claude 연결 (sample capability). 안 되는 환경에서는 예시 답변 ===== */
+let SAMPLE=null;
+
+function setAiState(){const n=document.querySelector(".hint");if(n)n.textContent=SAMPLE?"Claude가 이 사이트의 강의·사례·Q&A를 읽고 답해요. 처음 한 번은 사용 허락을 물어봐요.":"이런 게 궁금하다면 눌러서 물어보세요"}
+const TURNS=[];
+function siteData(){
+  const L=LESSONS.map(x=>`- 강의 ${x.n}회 「${x.title}」(${PH[x.ph][0]}, ${x.h}): ${x.goal} / 실습: ${x.task.join("; ")}`).join("\n");
+  const C=CASES.map(c=>`- 사례 「${c.t}」(${c.subj}, ${c.kind}, ${c.team}, 프로그램: ${c.tools.join(", ")}, 팀내 만족도 ${c.score}/10): ${c.sum} 기존 방법: ${c.before}. 한계: ${c.limit}`).join("\n");
+  const Q=QNA.map(x=>`- 질문 「${x.t}」: ${x.q||"(내용 없음)"}${x.ans.length?" / 답변: "+x.ans.map(a=>a.a).join(" | "):" / 아직 답변 없음"}`).join("\n");
+  const N=(typeof NEWS!=="undefined"?NEWS:[]).map(n=>`- 소식 「${n.t}」(${n.co}, ${n.date}): ${n.sum} 편집 활용: ${n.use}`).join("\n");
+  return `[강의]\n${L}\n\n[활용사례]\n${C}\n\n[Q&A]\n${Q}\n\n[최신 AI 소식]\n${N}`;
+}
+const RULES=()=>`당신은 출판사 콘텐츠본부의 사내 사이트 'AI 활용 사례'의 도우미입니다. 사용자는 교과서·참고서를 만드는 편집자입니다.
+규칙:
+- 한국어로, 쉽고 짧게(3~5문장) 답합니다. 목록이 필요하면 3개 이내로.
+- 아래 사이트 자료를 근거로 답하고, 자료에 없는 내용은 "사이트에는 아직 없는 내용"이라고 먼저 밝힌 뒤 일반적인 조언을 짧게 덧붙입니다.
+- 회사 원고·개인정보 입력은 '회사 승인 범위 안에서, 미공개 원고는 사전 협의'가 원칙이라고 안내합니다.
+- 마지막 줄에 근거로 쓴 항목을 "출처: 강의 3회, 사례 「…」"처럼 적습니다. 근거가 없으면 이 줄을 쓰지 않습니다.
+- 마크다운 기호(#, **)는 쓰지 않습니다.
+
+[사이트 자료]
+${siteData()}`;
+let busy=false;
+async function ask(s){
+  if(busy)return;
+  say(s,"me");
+  if(!SAMPLE){setTimeout(()=>{const[r,src]=reply(s);say(r,"bot demo",src)},300);return}
+  busy=true;const btn=$("#chat-form button[type=submit]");if(btn)btn.disabled=true;
+  const d=document.createElement("div");d.className="msg bot ai";d.textContent="생각하는 중…";log.appendChild(d);log.scrollTop=log.scrollHeight;
+  TURNS.push({role:"user",content:s});
+  try{
+    const {text,truncated}=await SAMPLE([{role:"user",content:RULES()},...TURNS.slice(-8)],{cache:false,model:"claude-haiku-5-5",modelTier:"quick",onText:({text})=>{d.textContent=text;log.scrollTop=log.scrollHeight}});
+    d.textContent=text+(truncated?"\n(답이 길어 중간에 끊겼어요. 더 좁혀서 물어봐 주세요.)":"");
+    TURNS.push({role:"assistant",content:text});
+  }catch(e){
+    TURNS.pop();
+    const code=e&&e.code;
+    if(code==="not_granted"||code==="sampling_disabled"||code==="not_declared"||code==="capability_disabled"||code==="capability_removed"){
+      SAMPLE=null;setAiState();d.className="msg bot demo";const[r,src]=reply(s);d.textContent=r;if(src){const x=document.createElement("span");x.className="src";x.textContent="출처: "+src;d.appendChild(x)}
+    }else{
+      d.textContent=(e&&e.text?e.text+"\n\n":"")+({rate_limited:"질문이 너무 많아요. 잠시 뒤에 다시 물어봐 주세요.",session_expired:"다시 로그인한 뒤 물어봐 주세요.",refused:"이 질문에는 답할 수 없어요. 다르게 물어봐 주세요.",cancelled:"멈췄어요."}[code]||"답을 받지 못했어요. 잠시 뒤 다시 물어봐 주세요.");
+    }
+  }finally{busy=false;if(btn)btn.disabled=false;log.scrollTop=log.scrollHeight}
+}
+
+/* ===== 배포 사이트 전용: 챗봇은 이 사이트 서버(/api/chat)를 거쳐 Claude Haiku 5.5가 답함 ===== */
+let SITE_AI=true;
+function setAiState(){const n=document.querySelector(".hint");if(n)n.textContent=SITE_AI?"Claude가 이 사이트의 강의·사례·Q&A를 읽고 답해요.":"이런 게 궁금하다면 눌러서 물어보세요"}
+setTimeout(setAiState,0);
+async function ask(s){
+  if(busy)return;
+  say(s,"me");
+  if(!SITE_AI){setTimeout(()=>{const[r,src]=reply(s);say(r,"bot demo",src)},300);return}
+  busy=true;const btn=$("#chat-form button[type=submit]");if(btn)btn.disabled=true;
+  const d=document.createElement("div");d.className="msg bot ai";d.textContent="생각하는 중…";log.appendChild(d);log.scrollTop=log.scrollHeight;
+  TURNS.push({role:"user",content:s});
+  const demo=()=>{SITE_AI=false;setAiState();d.className="msg bot demo";const[r,src]=reply(s);d.textContent=r;if(src){const x=document.createElement("span");x.className="src";x.textContent="출처: "+src;d.appendChild(x)}};
+  try{
+    const r=await fetch("/api/chat",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({messages:TURNS.slice(-8)})});
+    if(!r.ok){
+      TURNS.pop();
+      let err="";try{err=(await r.json()).error}catch(e){}
+      if(r.status===503||r.status===404){demo();return}
+      d.textContent=r.status===429?(err==="daily"?"오늘 질문 한도를 다 썼어요. 내일 다시 물어봐 주세요.":"질문이 너무 많아요. 잠시 뒤에 다시 물어봐 주세요."):"질문을 이해하지 못했어요. 500자 이내로 다시 물어봐 주세요.";
+      return;
+    }
+    const rd=r.body.getReader(),dec=new TextDecoder();let text="";
+    for(;;){const{done,value}=await rd.read();if(done)break;text+=dec.decode(value,{stream:true});d.textContent=text.replace("\n[[ERROR]]","");log.scrollTop=log.scrollHeight}
+    if(text.includes("[[ERROR]]")||!text.trim()){TURNS.pop();d.textContent=(text.replace("\n[[ERROR]]","").trim()?d.textContent+"\n\n":"")+"답을 받지 못했어요. 잠시 뒤 다시 물어봐 주세요.";return}
+    TURNS.push({role:"assistant",content:text.slice(0,3000)});
+  }catch(e){
+    TURNS.pop();
+    if(!navigator.onLine)d.textContent="인터넷 연결을 확인해 주세요.";else demo();
+  }finally{busy=false;if(btn)btn.disabled=false;log.scrollTop=log.scrollHeight}
+}
+
+route();
+</script>
+
+</body></html>
