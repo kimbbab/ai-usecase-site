@@ -113,7 +113,7 @@ button.tr{all:unset;box-sizing:border-box;display:grid;gap:16px;align-items:cent
 button.tr:hover{background:var(--soft)}
 button.tr:focus-visible{outline:2px solid var(--green);outline-offset:2px}
 .tr.cols-case{grid-template-columns:44px 74px minmax(0,1fr) 90px 92px 70px}
-.tr.cols-lec{grid-template-columns:44px 74px minmax(0,1fr) 64px 64px 70px}
+.tr.cols-lec{grid-template-columns:44px minmax(0,1fr) 64px 64px 70px}
 .tr.cols-qna{grid-template-columns:44px 84px minmax(0,1fr) 110px 56px 56px}
 .tr .n{font-size:12.5px;font-variant-numeric:tabular-nums;font-weight:700;color:var(--sub);width:28px;height:28px;border-radius:50%;background:var(--soft);display:grid;place-items:center}
 .tr h3{margin:0 0 3px;font-size:15px;font-weight:700;letter-spacing:-.01em}
@@ -379,7 +379,7 @@ function lessonView(x){
   const i=LESSONS.indexOf(x),prev=LESSONS[i-1],next=LESSONS[i+1];
   return `<button class="back" data-back>← 강의 목록</button>
   <div class="lesson"><div>
-    <div class="panel"><div class="tags"><span class="tag blue">${PH[x.ph][0]} · ${x.n}회</span><span class="tag">${esc(x.h)}</span></div>
+    <div class="panel"><div class="tags"><span class="tag blue">${x.n}회</span><span class="tag">${esc(x.h)}</span></div>
       <h1>${esc(x.title)}</h1><div class="goalbox"><b>목표</b>${esc(x.goal)}</div></div>
     ${x.img?`<div class="panel"><figure class="fig"><img src="${x.img}" alt="${esc(x.cap)}"><figcaption>${esc(x.cap)}</figcaption></figure></div>`:""}
     <div class="panel"><h2>진행 순서</h2><table class="plan">${x.plan.map(([a,b])=>`<tr><td>${esc(a)}</td><td>${esc(b)}</td></tr>`).join("")}</table></div>
@@ -591,8 +591,8 @@ function lectures(){
   const s=srch();
   const L=LESSONS.filter(x=>(!G.lph||x.ph==G.lph)&&(!G.lh||x.h===G.lh)&&(!s||JSON.stringify(x).includes(s)));
   return `<div class="box table"><div class="table-h"><h2>전체 강의</h2><div class="r"><span>${L.length}개 표시</span><button class="pill ghost" id="add-lec" type="button">강의 올리기</button></div></div>
-  <div class="tr hd cols-lec"><span>#</span><span>기간</span><span>강의 및 목표</span><span>시간</span><span>조회</span><span>좋아요</span></div>
-  ${L.map(x=>`<button type="button" class="tr cols-lec" data-lec="${x.id}"><span class="n">${pad(x.n)}</span><span class="lab">${PH[x.ph][0]}</span>
+  <div class="tr hd cols-lec"><span>#</span><span>강의 및 목표</span><span>시간</span><span>조회</span><span>좋아요</span></div>
+  ${L.map(x=>`<button type="button" class="tr cols-lec" data-lec="${x.id}"><span class="n">${pad(x.n)}</span>
     <div class="mid"><h3>${esc(x.title)}</h3><p>${esc(x.goal)}</p><div class="sm"><span>강사</span><span>· 실습 ${x.task.length}개</span>${x.links.length?`<span class="tag">참고 링크 ${x.links.length}</span>`:""}</div></div>
     <span class="v mono">${esc(x.h)}</span><span class="v mono">${x.views}</span><span>${lecLike(x)}</span></button>`).join("")||`<div class="empty">찾는 강의가 없습니다.</div>`}</div>`;
 }
@@ -703,7 +703,7 @@ let SAMPLE=null;
 function setAiState(){const n=document.querySelector(".hint");if(n)n.textContent=SAMPLE?"Claude가 이 사이트의 강의·사례·Q&A를 읽고 답해요. 처음 한 번은 사용 허락을 물어봐요.":"이런 게 궁금하다면 눌러서 물어보세요"}
 const TURNS=[];
 function siteData(){
-  const L=LESSONS.map(x=>`- 강의 ${x.n}회 「${x.title}」(${PH[x.ph][0]}, ${x.h}): ${x.goal} / 실습: ${x.task.join("; ")}`).join("\n");
+  const L=LESSONS.map(x=>`- 강의 ${x.n}회 「${x.title}」(${x.h}): ${x.goal} / 실습: ${x.task.join("; ")}`).join("\n");
   const C=CASES.map(c=>`- 사례 「${c.t}」(${c.subj}, ${c.kind}, ${c.team}, 프로그램: ${c.tools.join(", ")}, 팀내 만족도 ${c.score}/10): ${c.sum} 기존 방법: ${c.before}. 한계: ${c.limit}`).join("\n");
   const Q=QNA.map(x=>`- 질문 「${x.t}」: ${x.q||"(내용 없음)"}${x.ans.length?" / 답변: "+x.ans.map(a=>a.a).join(" | "):" / 아직 답변 없음"}`).join("\n");
   const N=(typeof NEWS!=="undefined"?NEWS:[]).map(n=>`- 소식 「${n.t}」(${n.co}, ${n.date}): ${n.sum} 편집 활용: ${n.use}`).join("\n");
