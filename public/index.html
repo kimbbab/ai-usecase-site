@@ -109,7 +109,7 @@ main{padding-block:20px 120px}
 .tr{display:grid;gap:16px;align-items:center;padding:16px 0;border-top:1px solid var(--line)}
 .tr.hd{font-size:12px;color:var(--faint);padding:8px 0;border-top:0;border-bottom:1px solid var(--line)}
 .tr.hd + .tr{border-top:0}
-button.tr{all:unset;box-sizing:border-box;display:grid;gap:16px;align-items:center;padding:16px 10px;margin:0 -10px;border-radius:12px;border-top:1px solid var(--line);cursor:pointer;width:100%}
+button.tr{all:unset;box-sizing:border-box;display:grid;gap:16px;align-items:center;padding:16px 10px;margin:0 -10px;border-radius:12px;border-top:1px solid var(--line);cursor:pointer;width:calc(100% + 20px)}
 button.tr:hover{background:var(--soft)}
 button.tr:focus-visible{outline:2px solid var(--green);outline-offset:2px}
 .tr.cols-case{grid-template-columns:44px 74px minmax(0,1fr) 90px 92px 70px}
@@ -385,7 +385,7 @@ let CASES=[
    sum:"업체가 드라이브에 올린 교정지 파일의 이름 규칙(교과_단원_회차), 쪽수, 빈 쪽을 n8n이 바로 확인합니다. 규칙에 어긋나면 업체 담당자에게 '파일명 확인 요청' 메일이 자동으로 가고, 맞으면 편집자에게 '납품 완료'만 알립니다.",
    before:"파일을 열어 보고 업체에 직접 전화·메일",limit:"업체 메일 주소 목록을 최신으로 관리해야 함",
    shot:[["me","드라이브에 파일이 올라오면 파일명이 '영어_3단원_2교.pdf' 형식인지 확인하고, 틀리면 업체에 메일을 보내는 흐름을 만들어 줘."],["ai","1) Google Drive Trigger: 새 파일\n2) If: 파일명 규칙 확인\n3) 틀림 → Gmail: 업체에 확인 요청\n4) 맞음 → 편집자에게 '납품 완료' 알림"]]},
-  {by:"kwon",kind:"팀 교육",subj:"과학",tools:["n8n","Claude Opus 5.5"],t:"매주 월요일 AI 소식 요약을 팀 메일로",team:"중고등과학팀",score:8.7,date:"11.04",likes:5,
+  {by:"kwon",kind:"팀 교육",subj:"과학",tools:["n8n","Claude"],t:"매주 월요일 AI 소식 요약을 팀 메일로",team:"중고등과학팀",score:8.7,date:"11.04",likes:5,
    sum:"Anthropic·OpenAI·Google 공식 블로그의 새 글을 n8n이 매주 월요일 아침에 모아 Claude에 보내고, '편집 업무에 쓸 만한 점' 3줄 요약을 팀 메일로 받습니다. 팀 회의 첫 5분 자료로 씁니다.",
    before:"각자 뉴스를 찾아보고 따로 공유",limit:"요약은 원문 링크와 함께 확인",
    shot:[["me","AI 회사 블로그 새 글을 매주 모아서 편집자에게 쓸모 있는 점만 3줄로 요약해 팀 메일로 보내는 흐름을 알려 줘."],["ai","1) Schedule Trigger: 월 08:30\n2) RSS Read: 블로그 3곳\n3) Claude: 글마다 3줄 요약\n4) Gmail: 팀 메일 발송"]]},
@@ -429,22 +429,22 @@ let CASES=[
    sum:"한글 파일로 된 실험 활동지 내용을 Codex에 주고, 단계별로 넘기며 답을 적는 웹페이지를 만들었습니다. e북 시제품 회의 자료로 썼습니다.",
    before:"활동지를 그림 파일로만 공유",limit:"수식·단위 표기는 원본과 대조 필요",
    shot:[["me","이 실험 활동지를 5단계로 나눠 넘기면서 답을 적는 웹페이지로 만들어 줘."],["ai","activity.html을 만들었습니다. 단계마다 입력 칸과 '다음' 버튼이 있습니다."]]},
-  {by:"joo",kind:"팀 교육",subj:"국어",tools:["Claude Opus 5.5"],t:"읽기 지문 수준별 발문 초안",team:"초등국어팀",score:9.6,date:"11.01",
+  {by:"joo",kind:"팀 교육",subj:"국어",tools:["Claude"],t:"읽기 지문 수준별 발문 초안",team:"초등국어팀",score:9.6,date:"11.01",
    sum:"학년과 성취기준을 주고 사실·추론·감상 발문을 나눠 초안을 받았습니다.",before:"지문마다 발문을 처음부터 작성",limit:"성취기준 번호를 틀리게 쓰는 경우가 있어 확인 필요",
    shot:[["me","초등 4학년 설명문이야. 사실 3개, 추론 4개, 감상 3개로 발문 만들어 줘."],["ai","[사실] 글쓴이가 소개한 곤충의 이름은 무엇인가요?\n[추론] 개미가 줄지어 다니는 까닭은 무엇일까요?"]]},
-  {by:"kim",kind:"개인",subj:"수학",tools:["GPT-6 Astra","Claude Opus 5.5"],t:"단원평가 해설의 계산 오류 찾기",team:"수학팀",score:9.4,date:"10.31",
+  {by:"kim",kind:"개인",subj:"수학",tools:["ChatGPT","Claude"],t:"단원평가 해설의 계산 오류 찾기",team:"수학팀",score:9.4,date:"10.31",
    sum:"문항과 해설을 넣고 단계별 검산을 시킨 뒤, 두 모델 결과가 다른 곳만 다시 봤습니다.",before:"해설을 손으로 다시 풀어 확인",limit:"그림이 있는 문항은 읽기가 불안정",
    shot:[["me","3번 해설을 단계별로 검산해 줘. 틀린 줄이 있으면 표시해 줘."],["ai","4번째 줄에서 2x+6=14를 x=3으로 풀었는데, x=4가 맞습니다."]]},
-  {by:"kwon",kind:"팀 교육",subj:"과학",tools:["Claude Opus 5.5"],t:"교정지 단위·기호 표기 통일 점검",team:"중고등과학팀",score:9.3,date:"10.30",
+  {by:"kwon",kind:"팀 교육",subj:"과학",tools:["Claude"],t:"교정지 단위·기호 표기 통일 점검",team:"중고등과학팀",score:9.3,date:"10.30",
    sum:"교정지 PDF와 표기 규칙을 주고, 어긋난 쪽수와 표기를 목록으로 받았습니다.",before:"교정지를 넘기며 눈으로 확인",limit:"수식 이미지 안의 단위는 찾지 못함",
    shot:[["me","단위는 m/s, kg·m/s² 형식으로 통일이야. 어긋난 곳을 쪽수와 함께 알려줘."],["ai","p.42 ‘m/sec’ → m/s\np.57 ‘kgm/s2’ → kg·m/s²"]]},
-  {by:"jung",kind:"개인",subj:"영어",tools:["GPT-6 Astra"],t:"단원별 어휘 목록과 기본어휘 대조",team:"중등영어1팀",score:9.1,date:"10.29",
+  {by:"jung",kind:"개인",subj:"영어",tools:["ChatGPT"],t:"단원별 어휘 목록과 기본어휘 대조",team:"중등영어1팀",score:9.1,date:"10.29",
    sum:"단원 어휘 엑셀과 교육과정 기본어휘를 올리고 누락·초과 어휘 표를 받았습니다.",before:"엑셀에서 눈으로 대조",limit:"파생어 처리 기준을 미리 알려줘야 함",
    shot:[["me","두 파일을 비교해서 기본어휘에 없는 단어만 표로 정리해 줘."],["ai","3단원 sustainable · 기본어휘 외\n5단원 enormous · 기본어휘 외"]]},
-  {by:"lee",kind:"개인",subj:"수학",tools:["Gemini 4 Carbon"],t:"교과서 삽화 대체 텍스트 초안",team:"초등수학팀",score:8.8,date:"10.28",
+  {by:"lee",kind:"개인",subj:"수학",tools:["Claude"],t:"교과서 삽화 대체 텍스트 초안",team:"초등수학팀",score:8.8,date:"10.28",
    sum:"삽화 이미지를 넣고 시각장애 학생용 대체 텍스트 초안을 받아 다듬었습니다.",before:"삽화마다 직접 설명문 작성",limit:"수량·위치 표현을 꼭 확인해야 함",
    shot:[["me","이 그림의 대체 텍스트를 40자 안으로 써 줘."],["ai","사과 3개와 배 2개가 접시 위에 놓여 있다."]]},
-  {by:"park",kind:"팀 교육",subj:"국어",tools:["Claude Opus 5.5","n8n"],t:"필자 원고 접수 현황 자동 정리",team:"고등국어팀",score:8.9,date:"10.27",
+  {by:"park",kind:"팀 교육",subj:"국어",tools:["Claude","n8n"],t:"필자 원고 접수 현황 자동 정리",team:"고등국어팀",score:8.9,date:"10.27",
    sum:"원고 메일이 오면 필자·단원·날짜가 시트에 자동으로 쌓이게 했습니다. 팀 회의에서 함께 만들었습니다.",before:"메일을 열어 목록에 직접 기록",limit:"회사 메일 연동은 승인 필요",
    shot:[["me","원고 메일이 오면 시트에 필자, 단원, 받은 날짜를 적는 n8n 흐름을 알려줘."],["ai","1) Gmail Trigger 노드: 새 메일 감지\n2) Google Sheets 노드: Append row → 필자, 단원, 날짜"]]}
 ];
@@ -582,7 +582,7 @@ function openWrite(kind){
     <label>제목<input id="w-t" required placeholder="예: 교정지 표기 통일 점검"></label>
     <div class="two"><label>구분<select id="w-kind"><option>개인</option><option>팀 교육</option></select></label>
     <label>교과<select id="w-subj"><option>국어</option><option>수학</option><option>영어</option><option>과학</option></select></label></div>
-    <div class="two"><label>사용 프로그램<input id="w-tools" placeholder="예: GPT-6 Astra, Claude Opus 5.5"></label>
+    <div class="two"><label>사용 프로그램<input id="w-tools" placeholder="예: ChatGPT, Claude"></label>
     <label>적용한 팀<input id="w-team" placeholder="예: 국어팀"></label></div>
     <label>팀내 만족도 (10점)<input id="w-score" type="number" min="0" max="10" step="0.1" value="9.0"></label>
     <label>자세한 내용<textarea id="w-sum" placeholder="어떤 일을, 어떻게 맡겼는지"></textarea></label>
@@ -596,7 +596,7 @@ function openWrite(kind){
 document.addEventListener("submit",e=>{
   if(e.target.id==="wform"){e.preventDefault();const k=e.target.dataset.kind;
     if(k==="case"){const file=$("#w-img").files[0];
-      const add=img=>{CASES.unshift({by:"kim",kind:$("#w-kind").value,subj:$("#w-subj").value,tools:($("#w-tools").value||"Claude Opus 5.5").split(",").map(s=>s.trim()).filter(Boolean),
+      const add=img=>{CASES.unshift({by:"kim",kind:$("#w-kind").value,subj:$("#w-subj").value,tools:($("#w-tools").value||"Claude").split(",").map(s=>s.trim()).filter(Boolean),
         t:$("#w-t").value,team:$("#w-team").value||"수학팀",score:+$("#w-score").value||0,date:"11.02",sum:$("#w-sum").value,before:"-",limit:"-",img,likes:0,shot:[["me","(캡처 없음)"]]});
         close();go("cases");toast("사례를 올렸습니다")};
       if(file){const r=new FileReader();r.onload=()=>add(r.result);r.readAsDataURL(file)}else add(null);
