@@ -5,6 +5,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { handleChat, hasKey, readJson } from "./lib/chat.mjs";
 import { handlePosts, hasStore } from "./lib/store.mjs";
+import { handleNews, handleNewsRefresh } from "./lib/news.mjs";
 
 const PUBLIC = path.join(path.dirname(fileURLToPath(import.meta.url)), "public");
 const PORT = process.env.PORT || 3000;
@@ -28,6 +29,8 @@ http.createServer((req, res) => {
   const url = req.url.split("?")[0];
   if (url === "/api/chat") return void handleChat(req, res);
   if (url === "/api/posts") return void handlePosts(req, res, readJson);
+  if (url === "/api/news") return void handleNews(req, res);
+  if (url === "/api/news-refresh") return void handleNewsRefresh(req, res);
   if (url === "/healthz") return void res.writeHead(200).end("ok");
   if (req.method !== "GET" && req.method !== "HEAD") return void res.writeHead(405).end();
   serveStatic(req, res);
