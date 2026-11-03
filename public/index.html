@@ -802,7 +802,9 @@ openWrite=(orig=>function(kind){orig(kind);
   $("#w-t").focus();
 })(openWrite);
 const _postView=postView;
-postView=function(x){const h=_postView(x);return STORE?h.replace('<textarea id="reply-in"','<input id="reply-name" maxlength="20" placeholder="이름 (선택, 비우면 익명)" style="margin-bottom:8px;width:100%"><textarea id="reply-in"'):h};
+postView=function(x){let h=_postView(x).replace(/ ·  · /g," · ").replace(/ · <\/span>/g,"</span>");
+  if(STORE)h=h.replace('<form class="reply"','<form class="reply" style="flex-wrap:wrap"').replace('<textarea id="reply-in"','<div style="flex:0 0 100%"><input id="reply-name" maxlength="20" placeholder="이름 (선택, 비우면 익명)" aria-label="이름" style="width:220px;max-width:100%;height:34px;font-size:13px;border:1px solid var(--line);border-radius:10px;padding:0 10px;background:var(--bg)"></div><textarea id="reply-in"');
+  return h};
 document.addEventListener("submit",async e=>{
   if(!STORE)return; // 저장 기능이 없으면 예전처럼 화면에만 추가
   const f=e.target;
