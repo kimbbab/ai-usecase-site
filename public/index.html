@@ -252,24 +252,86 @@ ul.clean{margin:0;padding-left:18px;display:grid;gap:6px}
   .form .two{grid-template-columns:1fr}.detail{grid-template-columns:1fr;gap:2px}.sheet-in{padding:20px}
 }
 @media (max-width:520px){.wrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}.logo span{display:none}.strip{grid-auto-columns:100%}}
+/* ===== C안: 포털형 (큰 검색창 + 바로가기 + 왼쪽 콘텐츠 / 오른쪽 도우미) ===== */
+.pw{max-width:1180px;margin:0 auto;padding:0 20px}
+.top{position:static;background:var(--bg);border-bottom:0;backdrop-filter:none}
+.top-in{display:flex;justify-content:space-between;align-items:center;height:60px;gap:16px}
+.top-in .logo .ci{height:30px}
+.top-in .top-r{display:flex;gap:8px;align-items:center}
+.hero2{padding:22px 0 30px;text-align:center}
+.bigsearch{display:flex;align-items:center;gap:10px;max-width:660px;margin:0 auto;height:62px;padding:0 10px 0 22px;border:2px solid var(--green);border-radius:999px;background:var(--card);box-shadow:0 2px 10px -4px rgba(43,68,199,.25)}
+.bigsearch svg{width:22px;height:22px;stroke:var(--green);flex:none}
+.bigsearch input{flex:1;min-width:0;border:0;outline:0;background:transparent;font-size:18px;height:100%}
+.bigsearch input::-webkit-search-cancel-button{display:none}
+.bigsearch .aibtn{flex:none;height:42px;padding:0 16px;border:0;border-radius:999px;background:var(--green-soft);color:var(--green);font-weight:800;cursor:pointer;display:flex;align-items:center;gap:6px}
+.bigsearch .aibtn:hover{background:var(--green);color:var(--go-ink)}
+.shortcuts{display:flex;justify-content:center;flex-wrap:wrap;gap:6px 18px;margin-top:20px}
+.sc{display:flex;flex-direction:column;align-items:center;gap:6px;width:64px;background:none;border:0;padding:0;cursor:pointer;color:var(--ink);text-decoration:none;font-size:12.5px}
+.sc i{display:grid;place-items:center;width:46px;height:46px;border-radius:16px;background:var(--card);border:1px solid var(--line);box-shadow:0 2px 6px -3px rgba(0,0,0,.12)}
+.sc i svg{width:22px;height:22px;fill:none;stroke:var(--green);stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.sc:hover i{border-color:var(--green)}
+.sc[aria-current] i{background:var(--green)} .sc[aria-current] i svg{stroke:var(--go-ink)} .sc[aria-current]{font-weight:800}
+.layout2{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:24px;align-items:start;padding-bottom:60px}
+.layout2 .side{position:sticky;top:16px;display:flex;flex-direction:column;gap:16px}
+.pbox{background:var(--card);border:1px solid var(--line);border-radius:16px;margin-bottom:18px;overflow:hidden}
+.ptabs{display:flex;align-items:center;gap:0;padding:18px 20px 12px;flex-wrap:wrap}
+.ptabs button,.ptabs a{border:0;background:none;padding:0;font-size:16px;color:var(--faint);cursor:pointer;text-decoration:none}
+.ptabs button+button::before,.ptabs a+a::before{content:"/";color:var(--line);margin:0 10px}
+.ptabs [aria-pressed="true"],.ptabs .on{color:var(--ink);font-weight:800}
+.ptabs>.more{margin-left:auto;font-size:13px;color:var(--sub);display:inline-block;width:auto;flex:none} .ptabs .more::before{content:none!important}
+.pstrip{margin:0 20px;padding:10px 14px;background:var(--soft);border-radius:10px;font-size:13.5px;color:var(--sub);display:flex;gap:10px;align-items:center;white-space:nowrap;overflow:hidden}
+.pstrip b{color:var(--ink)} .pstrip span{overflow:hidden;text-overflow:ellipsis}
+.pnews{display:grid;grid-template-columns:200px minmax(0,1fr);gap:20px;padding:16px 20px 20px}
+.pfeat{border:0;border-radius:12px;padding:18px;text-align:left;cursor:pointer;display:flex;flex-direction:column;justify-content:flex-end;gap:4px;min-height:150px;background:#1d2433;color:#fff}
+.pfeat small{opacity:.7;font-size:12px} .pfeat b{font-size:19px;line-height:1.3} .pfeat span{font-size:12px;opacity:.85}
+.pfeat.light{background:var(--soft);color:var(--ink)}
+.sc span{white-space:nowrap}
+#main{min-width:0}
+.plist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:9px;min-width:0}
+.plist li{display:flex;gap:10px;align-items:baseline;min-width:0}
+.plist button{border:0;background:none;padding:0;text-align:left;cursor:pointer;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1}
+.plist button:hover{text-decoration:underline}
+.plist em{font-style:normal;font-size:12px;color:var(--faint);flex:none}
+.plist .st{font-size:11.5px;font-weight:700;flex:none;padding:1px 6px;border-radius:6px;background:var(--soft);color:var(--sub)}
+.plist .st.wait{color:var(--orange)}
+.pfoot{border-top:1px solid var(--line);padding:12px 20px;display:flex;justify-content:center;gap:12px;align-items:center;font-size:13.5px}
+.pfoot a{color:var(--green);text-decoration:none;font-weight:600}
+.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:18px 22px;padding:6px 20px 22px}
+.pcard{display:grid;grid-template-columns:136px minmax(0,1fr);gap:14px;border:0;background:none;padding:0;text-align:left;cursor:pointer;align-items:start}
+.pcard .th{width:136px;height:90px;border-radius:10px;background:var(--soft) center/cover no-repeat;border:1px solid var(--line);display:grid;place-items:center;font-size:12px;color:var(--sub);font-weight:700;overflow:hidden}
+.pcard h3{margin:0 0 4px;font-size:14.5px;line-height:1.45;font-weight:600;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pcard:hover h3{text-decoration:underline}
+.pcard p{margin:0;font-size:12.5px;color:var(--faint)}
+.sbox{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 20px}
+.sbox h2{margin:0 0 12px;font-size:15px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);text-align:center;gap:4px}
+.stats button{border:0;background:none;padding:6px 0;cursor:pointer;border-radius:10px}
+.stats button:hover{background:var(--soft)}
+.stats b{display:block;font-size:24px;font-weight:800;letter-spacing:-.02em}
+.stats span{font-size:12px;color:var(--sub)}
+.stats .wait b{color:var(--orange)}
+.layout2 .side .box{margin:0;border-radius:16px}
+.srchres h2{font-size:15px;margin:0 0 6px}
+.foot2{border-top:1px solid var(--line);padding:18px 0 30px;font-size:12.5px;color:var(--faint);display:flex;gap:14px;justify-content:center}
+.foot2 a{color:var(--sub)}
+@media (max-width:1000px){.layout2{grid-template-columns:minmax(0,1fr)}.layout2 .side{position:static}}
+@media (max-width:640px){.pfeat{min-height:96px}.pcard{grid-template-columns:110px minmax(0,1fr)}.pcard .th{width:110px;height:74px}.pnews{grid-template-columns:1fr}.pgrid{grid-template-columns:1fr}.bigsearch{height:54px}.bigsearch input{font-size:16px}.sc{width:56px}.top-in .logo span{display:none}}
 </style>
 
-<header class="top">
-  <div class="wrap top-in">
-    <a class="logo" href="#lectures"><svg class="ci" viewBox="0 0 192 80" role="img" aria-label="동아출판"><path d="M21.593871,33.5437419 L21.593871,46.016 L12.4725806,46.016 L12.4725806,67.0914839 L21.593871,67.0914839 L21.593871,79.5643871 L-0.00032258065,79.5643871 L-0.00032258065,33.5437419 L21.593871,33.5437419 Z M40.6946452,58.3424516 C51.6694839,58.3424516 51.4920645,74.7437419 40.6946452,74.7437419 C29.8062581,74.7437419 29.6327097,58.3424516 40.6946452,58.3424516 Z M106.457226,50.9836129 L106.457226,55.0642581 L99.4385161,55.0642581 L99.4385161,57.9532903 L104.815935,57.9532903 L104.815935,67.2313548 L93.8391613,67.2313548 L93.8391613,69.5139355 L105.350774,69.5139355 L105.350774,73.0545806 L89.2630323,73.0545806 L89.2630323,63.7371613 L100.239806,63.7371613 L100.239806,61.368129 L89.2630323,61.368129 L89.2630323,57.9532903 L94.8185161,57.9532903 L94.8185161,55.0642581 L87.5307742,55.0642581 L87.5307742,50.9836129 L106.457226,50.9836129 Z M40.6946452,62.4334194 C35.2843226,62.4334194 35.2843226,70.5166452 40.6946452,70.5166452 C46.0565806,70.5166452 46.0565806,62.4334194 40.6946452,62.4334194 Z M125.306387,51.2609677 L125.306387,60.0216129 L136.427677,60.0216129 L136.427677,64.1583871 L120.908968,64.1583871 L120.908968,51.2609677 L125.306387,51.2609677 Z M48.6920645,33.5727742 L48.6920645,37.7095484 L37.6752903,37.7095484 L37.6752903,44.419871 L48.6920645,44.419871 L48.6920645,48.5508387 L43.3604516,48.5508387 L43.3604516,51.9979355 L50.3836774,51.9979355 L50.3836774,56.0811613 L31.4946452,56.0811613 L31.4946452,51.9979355 L38.6494839,51.9979355 L38.6494839,48.5508387 L33.2256129,48.5508387 L33.2256129,33.5727742 L48.6920645,33.5727742 Z M79.0041935,32.9968387 L79.0041935,38.9097419 L84.4480645,38.9097419 L84.4480645,43.2226452 L79.0041935,43.2226452 L79.0041935,55.3484516 L74.6022581,55.3484516 L74.6022581,32.9968387 L79.0041935,32.9968387 Z M136.225097,33.0448387 L136.225097,38.9093548 L141.630258,38.9093548 L141.630258,43.0874194 L136.225097,43.0874194 L136.225097,49.5835484 L131.830258,49.5835484 L131.830258,33.0448387 L136.225097,33.0448387 Z M62.3629032,33.1168387 C73.3725806,33.1168387 73.3280645,49.5607097 62.3629032,49.5607097 C51.4493548,49.5607097 51.4003226,33.1168387 62.3629032,33.1168387 Z M127.538645,33.6654839 L127.538645,37.6487097 L125.422516,37.6487097 L125.422516,44.5687097 L127.538645,44.5687097 L127.538645,48.5977419 L111.675419,48.5977419 L111.675419,44.5687097 L113.571548,44.5687097 L113.571548,37.6487097 L111.675419,37.6487097 L111.675419,33.6654839 L127.538645,33.6654839 Z M99.2623871,30.3597419 L99.2623871,34.4352258 L104.815935,34.4352258 L104.815935,38.5087742 L99.6449677,38.5087742 L106.103032,48.5507097 L101.129484,48.5507097 L97.0385161,41.7603871 L92.9088387,48.5507097 L87.8843226,48.5507097 L94.3404516,38.5087742 L89.2630323,38.5087742 L89.2630323,34.4352258 L94.7294839,34.4352258 L94.7294839,30.3597419 L99.2623871,30.3597419 Z M168.351484,0.000129032258 C174.686968,0.000129032258 180.47729,2.58464516 184.623097,6.73625806 C188.772774,10.8891613 191.363742,16.6743226 191.361163,23.0117419 C191.363742,29.3427097 188.772774,35.1330323 184.623097,39.2814194 C180.481161,43.4323871 174.692129,46.0162581 168.363742,46.0162581 L167.089548,46.0162581 L167.089548,33.5433548 L168.351484,33.5433548 C171.281806,33.5433548 173.875355,32.3756129 175.802452,30.460129 C177.716,28.5330323 178.884387,25.9420645 178.889548,23.0117419 C178.884387,20.0820645 177.716,17.4833548 175.802452,15.560129 C173.875355,13.6381935 171.281806,12.4775484 168.351484,12.4698065 L167.089548,12.4698065 L167.089548,0.000129032258 L168.351484,0.000129032258 Z M62.3629032,37.3316774 C56.8816129,37.3316774 57.053871,45.442 62.3629032,45.442 C67.7177419,45.442 67.8467742,37.3316774 62.3629032,37.3316774 Z M121.303161,37.6493548 L117.823806,37.6493548 L117.823806,44.5687097 L121.303161,44.5687097 L121.303161,37.6493548 Z" fill="currentColor" fill-rule="evenodd"/></svg><span>콘텐츠본부 AI 활용 사례</span></a>
-    <nav class="nav" aria-label="메뉴"><a href="#lectures">강의</a><a href="#cases">활용사례</a><a href="#qna">Q&amp;A</a></nav>
-    <div class="top-r">
-      <label class="search"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="q" type="search" placeholder="강의 · 사례 · 질문 검색" aria-label="검색"><kbd>/</kbd></label>
-      <button class="btn" id="theme" type="button">Dark</button>
-      <button class="btn go" id="write" type="button">사례 올리기</button>
-    </div>
-  </div>
-</header>
+<header class="top"><div class="pw top-in">
+  <a class="logo" href="#home"><svg class="ci" viewBox="0 0 192 80" role="img" aria-label="동아출판"><path d="M21.593871,33.5437419 L21.593871,46.016 L12.4725806,46.016 L12.4725806,67.0914839 L21.593871,67.0914839 L21.593871,79.5643871 L-0.00032258065,79.5643871 L-0.00032258065,33.5437419 L21.593871,33.5437419 Z M40.6946452,58.3424516 C51.6694839,58.3424516 51.4920645,74.7437419 40.6946452,74.7437419 C29.8062581,74.7437419 29.6327097,58.3424516 40.6946452,58.3424516 Z M106.457226,50.9836129 L106.457226,55.0642581 L99.4385161,55.0642581 L99.4385161,57.9532903 L104.815935,57.9532903 L104.815935,67.2313548 L93.8391613,67.2313548 L93.8391613,69.5139355 L105.350774,69.5139355 L105.350774,73.0545806 L89.2630323,73.0545806 L89.2630323,63.7371613 L100.239806,63.7371613 L100.239806,61.368129 L89.2630323,61.368129 L89.2630323,57.9532903 L94.8185161,57.9532903 L94.8185161,55.0642581 L87.5307742,55.0642581 L87.5307742,50.9836129 L106.457226,50.9836129 Z M40.6946452,62.4334194 C35.2843226,62.4334194 35.2843226,70.5166452 40.6946452,70.5166452 C46.0565806,70.5166452 46.0565806,62.4334194 40.6946452,62.4334194 Z M125.306387,51.2609677 L125.306387,60.0216129 L136.427677,60.0216129 L136.427677,64.1583871 L120.908968,64.1583871 L120.908968,51.2609677 L125.306387,51.2609677 Z M48.6920645,33.5727742 L48.6920645,37.7095484 L37.6752903,37.7095484 L37.6752903,44.419871 L48.6920645,44.419871 L48.6920645,48.5508387 L43.3604516,48.5508387 L43.3604516,51.9979355 L50.3836774,51.9979355 L50.3836774,56.0811613 L31.4946452,56.0811613 L31.4946452,51.9979355 L38.6494839,51.9979355 L38.6494839,48.5508387 L33.2256129,48.5508387 L33.2256129,33.5727742 L48.6920645,33.5727742 Z M79.0041935,32.9968387 L79.0041935,38.9097419 L84.4480645,38.9097419 L84.4480645,43.2226452 L79.0041935,43.2226452 L79.0041935,55.3484516 L74.6022581,55.3484516 L74.6022581,32.9968387 L79.0041935,32.9968387 Z M136.225097,33.0448387 L136.225097,38.9093548 L141.630258,38.9093548 L141.630258,43.0874194 L136.225097,43.0874194 L136.225097,49.5835484 L131.830258,49.5835484 L131.830258,33.0448387 L136.225097,33.0448387 Z M62.3629032,33.1168387 C73.3725806,33.1168387 73.3280645,49.5607097 62.3629032,49.5607097 C51.4493548,49.5607097 51.4003226,33.1168387 62.3629032,33.1168387 Z M127.538645,33.6654839 L127.538645,37.6487097 L125.422516,37.6487097 L125.422516,44.5687097 L127.538645,44.5687097 L127.538645,48.5977419 L111.675419,48.5977419 L111.675419,44.5687097 L113.571548,44.5687097 L113.571548,37.6487097 L111.675419,37.6487097 L111.675419,33.6654839 L127.538645,33.6654839 Z M99.2623871,30.3597419 L99.2623871,34.4352258 L104.815935,34.4352258 L104.815935,38.5087742 L99.6449677,38.5087742 L106.103032,48.5507097 L101.129484,48.5507097 L97.0385161,41.7603871 L92.9088387,48.5507097 L87.8843226,48.5507097 L94.3404516,38.5087742 L89.2630323,38.5087742 L89.2630323,34.4352258 L94.7294839,34.4352258 L94.7294839,30.3597419 L99.2623871,30.3597419 Z M168.351484,0.000129032258 C174.686968,0.000129032258 180.47729,2.58464516 184.623097,6.73625806 C188.772774,10.8891613 191.363742,16.6743226 191.361163,23.0117419 C191.363742,29.3427097 188.772774,35.1330323 184.623097,39.2814194 C180.481161,43.4323871 174.692129,46.0162581 168.363742,46.0162581 L167.089548,46.0162581 L167.089548,33.5433548 L168.351484,33.5433548 C171.281806,33.5433548 173.875355,32.3756129 175.802452,30.460129 C177.716,28.5330323 178.884387,25.9420645 178.889548,23.0117419 C178.884387,20.0820645 177.716,17.4833548 175.802452,15.560129 C173.875355,13.6381935 171.281806,12.4775484 168.351484,12.4698065 L167.089548,12.4698065 L167.089548,0.000129032258 L168.351484,0.000129032258 Z M62.3629032,37.3316774 C56.8816129,37.3316774 57.053871,45.442 62.3629032,45.442 C67.7177419,45.442 67.8467742,37.3316774 62.3629032,37.3316774 Z M121.303161,37.6493548 L117.823806,37.6493548 L117.823806,44.5687097 L121.303161,44.5687097 L121.303161,37.6493548 Z" fill="currentColor" fill-rule="evenodd"/></svg><span>콘텐츠본부 AI 활용 사례</span></a>
+  <div class="top-r"><button class="btn" id="theme" type="button">Dark</button><button class="btn go" id="write" type="button">사례 올리기</button></div>
+</div></header>
 <span id="n-lec" hidden></span><span id="n-case" hidden></span><span id="n-qna" hidden></span><div id="filters" hidden></div>
-
-<main class="wrap">
+<section class="hero2 pw">
+  <label class="bigsearch"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    <input id="q" type="search" placeholder="강의 · 활용사례 · 질문 검색" aria-label="검색" autocomplete="off">
+    <button type="button" class="aibtn" id="ai-go" title="검색어를 AI 도우미에게 묻기">✦ AI</button></label>
+  <nav class="shortcuts" id="shortcuts" aria-label="바로가기"></nav>
+</section>
+<main class="pw">
   <div id="top-area"></div>
-  <div class="layout">
+  <div class="layout2">
     <div id="main"></div>
     <aside class="side" id="side">
       <section class="box ask" aria-label="AI 도우미에게 묻기">
@@ -282,10 +344,12 @@ ul.clean{margin:0;padding-left:18px;display:grid;gap:6px}
         <div class="suggest" id="suggest"></div>
         <div class="log" id="log" aria-live="polite"></div>
       </section>
+      <section class="sbox" id="stats"></section>
       <section class="box watch" id="watch"></section>
     </aside>
   </div>
 </main>
+<footer class="pw foot2"><span>콘텐츠본부 AI 활용 사례</span><a href="b.html">이전 디자인(B안) 보기</a></footer>
 
 <div class="modal" id="modal" hidden role="dialog" aria-modal="true"><div class="sheet" id="sheet"></div></div>
 <div class="toast" id="toast" hidden></div>
@@ -834,6 +898,82 @@ document.addEventListener("submit",async e=>{
   }
 },true);
 loadPosts();
+
+/* ===== C안: 포털형 화면 ===== */
+G.htab="news";G.ltab="lec";
+const ICON={
+ home:'<path d="M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-4v-6h-6v6H5a1 1 0 0 1-1-1z"/>',
+ lec:'<rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8 21h8M12 17v4M10 9l4 2-4 2z"/>',
+ case:'<path d="M4 6h16v12H4z"/><path d="M8 10h8M8 14h5"/>',
+ qna:'<path d="M5 5h14v10H9l-4 4z"/><path d="M10 9.2a2 2 0 1 1 2.6 1.9c-.4.2-.6.5-.6.9M12 13h.01"/>',
+ news:'<path d="M4 5h13v14H6a2 2 0 0 1-2-2z"/><path d="M17 9h3v8a2 2 0 0 1-2 2M8 9h5M8 13h5"/>',
+ pen:'<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M14 6l4 4"/>',
+ ask:'<path d="M12 3l1.8 4.6L18 9l-4.2 1.4L12 15l-1.8-4.6L6 9l4.2-1.4z"/><path d="M18 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/>'
+};
+const ico=k=>`<i><svg viewBox="0 0 24 24">${ICON[k]}</svg></i>`;
+function shortcuts(){
+  const S=[["home","홈","#home"],["lec","강의","#lectures"],["case","활용사례","#cases"],["qna","Q&A","#qna"],["news","AI 소식","news"],["pen","사례 올리기","w-case"],["qna","질문하기","w-qna"],["ask","AI 도우미","ask"]];
+  $("#shortcuts").innerHTML=S.map(([k,l,h])=>h.startsWith("#")?`<a class="sc" href="${h}" ${(h==="#"+view)?'aria-current="page"':""}>${ico(k)}<span>${l}</span></a>`:`<button type="button" class="sc" data-sc="${h}">${ico(k)}<span>${l}</span></button>`).join("");
+}
+document.addEventListener("click",e=>{const t=e.target.closest("[data-sc],[data-htab],[data-ltab],#ai-go");if(!t)return;
+  if(t.id==="ai-go"){const v=q();if(v){ask(v.slice(0,500))}else $("#chat-in").focus();$("#side").scrollIntoView({behavior:"smooth",block:"start"});return}
+  if(t.dataset.htab){G.htab=t.dataset.htab;draw();return}
+  if(t.dataset.ltab){G.ltab=t.dataset.ltab;draw();return}
+  const s=t.dataset.sc;
+  if(s==="news")openNews(NEWS[0].id);
+  else if(s==="w-case")openWrite("case");else if(s==="w-qna")openWrite("qna");
+  else if(s==="ask"){$("#chat-in").focus();$("#side").scrollIntoView({behavior:"smooth",block:"start"})}
+});
+function homeNews(){
+  const tabs=[["news","최신 AI 소식"],["hot","인기 사례"],["new","새 질문"]];
+  let feat,list,more;
+  if(G.htab==="news"){const n=NEWS[0];
+    feat=`<button type="button" class="pfeat" data-news="${n.id}"><small>${esc(n.co)}</small><b>${esc(n.model)}</b><span>${esc(n.tag)}</span></button>`;
+    list=NEWS.map(n=>`<li><button type="button" data-news="${n.id}">${esc(n.t)}</button><em>${esc(n.co)} · ${esc(n.date)}</em></li>`).join("")+NEWS.map(n=>`<li><button type="button" data-news="${n.id}">편집 업무에서는: ${esc(n.use)}</button><em>${esc(n.model)}</em></li>`).join("");
+    more=`<a href="#lectures">관련 강의 보기 ›</a>`;
+  }else if(G.htab==="hot"){const C=[...CASES].sort((a,b)=>caseLikes(b)-caseLikes(a)).slice(0,6),c=C[0];
+    feat=c?`<button type="button" class="pfeat light" data-case="${CASES.indexOf(c)}"><small>${esc(c.subj)} · ${esc(c.kind)}</small><b>${esc(c.t)}</b><span>♥ ${caseLikes(c)}</span></button>`:"";
+    list=C.map(c=>`<li><button type="button" data-case="${CASES.indexOf(c)}">${esc(c.t)}</button><em>${esc(c.subj)} · ♥ ${caseLikes(c)}</em></li>`).join("");
+    more=`<a href="#cases">활용사례 전체 보기 ›</a>`;
+  }else{const L=QNA.slice(0,6),x=L[0];
+    feat=x?`<button type="button" class="pfeat light" data-post="${QNA.indexOf(x)}"><small>${x.ans.length?"답변 완료":"답변 대기"}</small><b>${esc(x.t)}</b><span>${esc(nm(x.by))} · ${esc(x.date)}</span></button>`:"";
+    list=L.map(x=>`<li><span class="st ${x.ans.length?"":"wait"}">${x.ans.length?"답변 "+x.ans.length:"대기"}</span><button type="button" data-post="${QNA.indexOf(x)}">${esc(x.t)}</button><em>${esc(x.date)}</em></li>`).join("");
+    more=`<a href="#qna">Q&amp;A 전체 보기 ›</a>`;
+  }
+  const w=QNA.filter(x=>!x.ans.length).length;
+  return `<section class="pbox"><div class="ptabs">${tabs.map(([v,l])=>`<button type="button" data-htab="${v}" aria-pressed="${G.htab===v}">${l}</button>`).join("")}</div>
+  <div class="pstrip"><b>알림</b><span>${w?`답변을 기다리는 질문이 ${w}개 있어요. 아는 내용이면 답변을 남겨 주세요.`:"모든 질문에 답변이 달렸어요."}</span></div>
+  <div class="pnews">${feat}<ul class="plist">${list}</ul></div><div class="pfoot">${more}</div></section>`;
+}
+function homeTiles(){
+  const tabs=[["lec","강의"],["case","활용사례"]];
+  let cards;
+  if(G.ltab==="lec")cards=LESSONS.slice(0,8).map(x=>`<button type="button" class="pcard" data-lec="${x.id}"><span class="th" style="${x.img?`background-image:url('${x.img}')`:""}">${x.img?"":x.n+"회"}</span><span><h3>${x.n}회 · ${esc(x.title)}</h3><p>${esc(x.h)} · 실습 ${x.task.length}개 · ♥ ${lecLikes(x)}</p></span></button>`).join("");
+  else cards=CASES.slice(0,8).map(c=>`<button type="button" class="pcard" data-case="${CASES.indexOf(c)}"><span class="th" style="${c.img?`background-image:url('${c.img}')`:""}">${c.img?"":esc(c.subj)+"<br>"+esc((c.tools||[])[0]||"")}</span><span><h3>${esc(c.t)}</h3><p>${esc(nm(c.by))} · ${esc(c.team)} · ${esc(c.date)}</p></span></button>`).join("");
+  return `<section class="pbox"><div class="ptabs">${tabs.map(([v,l])=>`<button type="button" data-ltab="${v}" aria-pressed="${G.ltab===v}">${l}</button>`).join("")}<a class="more" href="${G.ltab==="lec"?"#lectures":"#cases"}">전체 보기 ›</a></div>
+  <div class="pgrid">${cards}</div></section>`;
+}
+function homeSearch(s){
+  const L=LESSONS.filter(x=>JSON.stringify(x).includes(s)),C=CASES.filter(x=>JSON.stringify(x).includes(s)),Q=QNA.filter(x=>JSON.stringify(x).includes(s));
+  const sec=(t,items,href)=>`<section class="pbox"><div class="ptabs"><button type="button" class="on" aria-pressed="true">${t} ${items.length}</button><a class="more" href="${href}">목록에서 보기 ›</a></div><ul class="plist" style="padding:4px 20px 20px">${items.join("")||`<li><em>찾는 내용이 없습니다.</em></li>`}</ul></section>`;
+  return `<div class="pstrip" style="margin:0 0 14px">‘${esc(s)}’ 검색 결과 · AI 도우미에게 물어보려면 검색창의 <b>AI</b> 버튼을 누르세요</div>`
+   +sec("강의",L.map(x=>`<li><button type="button" data-lec="${x.id}">${x.n}회 · ${esc(x.title)}</button><em>${esc(x.h)}</em></li>`),"#lectures")
+   +sec("활용사례",C.map(c=>`<li><button type="button" data-case="${CASES.indexOf(c)}">${esc(c.t)}</button><em>${esc(c.subj)}</em></li>`),"#cases")
+   +sec("Q&A",Q.map(x=>`<li><button type="button" data-post="${QNA.indexOf(x)}">${esc(x.t)}</button><em>답변 ${x.ans.length}</em></li>`),"#qna");
+}
+function home(){const s=q();return s?homeSearch(s):homeNews()+homeTiles()}
+function statsBox(){const w=QNA.filter(x=>!x.ans.length).length;
+  return `<h2>한눈에 보기</h2><div class="stats"><button type="button" onclick="location.hash='lectures'"><b>${LESSONS.length}</b><span>강의</span></button><button type="button" onclick="location.hash='cases'"><b>${CASES.length}</b><span>활용사례</span></button><button type="button" onclick="location.hash='qna'"><b>${QNA.length}</b><span>질문</span></button><button type="button" class="wait" onclick="G.qs='wait';location.hash='qna'"><b>${w}</b><span>답변 대기</span></button></div>`}
+draw=function(){
+  const sp=["lectures","cases","qna"].includes(view);
+  $("#top-area").innerHTML="";
+  $("#main").innerHTML=view==="home"?home():view==="lectures"?lectures():view==="cases"?cases():qna();
+  $("#watch").innerHTML=watch();$("#stats").innerHTML=statsBox();
+  $("#write").textContent=view==="qna"?"질문하기":"사례 올리기";
+  shortcuts();
+};
+route=function(){if(skipRoute){skipRoute=false;return}G.kw="";G.all=false;const h=location.hash.slice(1);view=["lectures","cases","qna"].includes(h)?h:"home";detail=null;draw();window.scrollTo(0,0)};
+$("#q").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();if(view!=="home"){}draw()}});
 
 route();
 </script>
