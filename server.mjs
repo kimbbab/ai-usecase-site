@@ -3,7 +3,8 @@ import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { handleChat, hasKey } from "./lib/chat.mjs";
+import { handleChat, hasKey, readJson } from "./lib/chat.mjs";
+import { handlePosts, hasStore } from "./lib/store.mjs";
 
 const PUBLIC = path.join(path.dirname(fileURLToPath(import.meta.url)), "public");
 const PORT = process.env.PORT || 3000;
@@ -26,7 +27,8 @@ function serveStatic(req, res) {
 http.createServer((req, res) => {
   const url = req.url.split("?")[0];
   if (url === "/api/chat") return void handleChat(req, res);
+  if (url === "/api/posts") return void handlePosts(req, res, readJson);
   if (url === "/healthz") return void res.writeHead(200).end("ok");
   if (req.method !== "GET" && req.method !== "HEAD") return void res.writeHead(405).end();
   serveStatic(req, res);
-}).listen(PORT, () => console.log(`listening on ${PORT}, key ${hasKey ? "set" : "MISSING"}`));
+}).listen(PORT, () => console.log(`listening on ${PORT}, key ${hasKey ? "set" : "MISSING"}, store ${hasStore ? "set" : "MISSING"}`));

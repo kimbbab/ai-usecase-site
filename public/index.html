@@ -464,7 +464,7 @@ document.addEventListener("submit",e=>{
   if(e.target.id==="wform"){e.preventDefault();const k=e.target.dataset.kind;
     if(k==="case"){const file=$("#w-img").files[0];
       const add=img=>{CASES.unshift({by:"kim",kind:$("#w-kind").value,subj:$("#w-subj").value,tools:($("#w-tools").value||"Claude Opus 5.5").split(",").map(s=>s.trim()).filter(Boolean),
-        t:$("#w-t").value,team:$("#w-team").value||"수학팀",score:+$("#w-score").value||0,date:"11.02",sum:$("#w-sum").value,before:"-",limit:"-",img,shot:[["me","(캡처 없음)"]]});
+        t:$("#w-t").value,team:$("#w-team").value||"수학팀",score:+$("#w-score").value||0,date:"11.02",sum:$("#w-sum").value,before:"-",limit:"-",img,likes:0,shot:[["me","(캡처 없음)"]]});
         close();go("cases");toast("사례를 올렸습니다")};
       if(file){const r=new FileReader();r.onload=()=>add(r.result);r.readAsDataURL(file)}else add(null);
     } else {QNA.unshift({by:"kim",t:$("#w-t").value,date:"11.02",views:0,q:$("#w-q").value,ans:[]});close();go("qna");toast("질문을 올렸습니다")}
@@ -772,6 +772,66 @@ async function ask(s){
     if(!navigator.onLine)d.textContent="인터넷 연결을 확인해 주세요.";else demo();
   }finally{busy=false;if(btn)btn.disabled=false;log.scrollTop=log.scrollHeight}
 }
+
+/* ===== 글 저장: 질문·답변·사례를 서버(/api/posts)에 저장해 모두에게 보이게 ===== */
+let STORE=false;
+const kst=iso=>{const d=new Date(new Date(iso).getTime()+9*3600e3);return String(d.getUTCMonth()+1).padStart(2,"0")+"."+String(d.getUTCDate()).padStart(2,"0")};
+const qKey=x=>x.sid?"q"+x.sid:"ex:"+x.t;
+async function loadPosts(){
+  try{
+    const r=await fetch("/api/posts");if(!r.ok)return;
+    const {questions,answers,cases}=await r.json();STORE=true;
+    [...questions].reverse().forEach(q=>QNA.unshift({sid:q.id,by:q.author||"익명",t:q.title,date:kst(q.created_at),views:0,q:q.body,ans:[]}));
+    answers.forEach(a=>{const x=QNA.find(q=>qKey(q)===a.question_key);if(x)x.ans.push({by:a.author||"익명",best:false,a:a.body})});
+    [...cases].reverse().forEach(c=>CASES.unshift({sid:c.id,by:c.author||"익명",kind:c.kind,subj:c.subj,tools:c.tools&&c.tools.length?c.tools:["(미입력)"],t:c.title,team:c.team||"-",score:+c.score||0,date:kst(c.created_at),sum:c.body,before:"-",limit:"-",img:c.img,likes:0,shot:[["me","(캡처 없음)"]]}));
+    draw();
+  }catch(e){}
+}
+async function savePost(data){
+  const r=await fetch("/api/posts",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(data)});
+  if(!r.ok){let e="";try{e=(await r.json()).error}catch(_){}throw new Error(e||"server")}
+  return (await r.json()).row;
+}
+const saveErr=e=>toast(e.message==="too_many"?"글을 너무 많이 올렸어요. 잠시 뒤 다시 해 주세요":e.message==="bad_input"?"내용을 확인해 주세요 (제목은 꼭, 글자 수 제한 있음)":"저장하지 못했어요. 잠시 뒤 다시 해 주세요");
+function shrink(file){return new Promise((ok,no)=>{const img=new Image();img.onload=()=>{const s=Math.min(1,1000/Math.max(img.width,img.height));const c=document.createElement("canvas");c.width=Math.round(img.width*s);c.height=Math.round(img.height*s);c.getContext("2d").drawImage(img,0,0,c.width,c.height);let q=.82,u=c.toDataURL("image/jpeg",q);while(u.length>440000&&q>.4){q-=.12;u=c.toDataURL("image/jpeg",q)}URL.revokeObjectURL(img.src);u.length>440000?no(new Error("big")):ok(u)};img.onerror=()=>no(new Error("img"));img.src=URL.createObjectURL(file)})}
+openWrite=(orig=>function(kind){orig(kind);
+  const f=$("#wform");if(!f)return;
+  const note=[...f.querySelectorAll("p")].find(p=>p.textContent.includes("새로고침"));
+  if(note)note.textContent=STORE?"올린 글은 이 사이트를 보는 모두에게 보여요. 미공개 원고·개인정보는 올리지 마세요.":"지금은 저장 기능이 꺼져 있어 새로고침하면 사라집니다.";
+  $("#w-t").closest("label").insertAdjacentHTML("beforebegin",`<label>이름 (선택)<input id="w-name" maxlength="20" placeholder="비우면 익명"></label>`);
+  $("#w-t").focus();
+})(openWrite);
+const _postView=postView;
+postView=function(x){const h=_postView(x);return STORE?h.replace('<textarea id="reply-in"','<input id="reply-name" maxlength="20" placeholder="이름 (선택, 비우면 익명)" style="margin-bottom:8px;width:100%"><textarea id="reply-in"'):h};
+document.addEventListener("submit",async e=>{
+  if(!STORE)return; // 저장 기능이 없으면 예전처럼 화면에만 추가
+  const f=e.target;
+  if(f.id==="wform"){e.preventDefault();e.stopPropagation();
+    const btn=f.querySelector("button[type=submit]");if(btn.disabled)return;btn.disabled=true;
+    const k=f.dataset.kind,author=($("#w-name")?.value||"").trim();
+    try{
+      if(k==="case"){const file=$("#w-img").files[0];let img=null;
+        if(file){try{img=await shrink(file)}catch(_){toast("그림이 너무 커서 빼고 올릴게요")}}
+        const data={type:"case",author,title:$("#w-t").value,kind:$("#w-kind").value,subj:$("#w-subj").value,tools:($("#w-tools").value||"").split(",").map(s=>s.trim()).filter(Boolean),team:$("#w-team").value,score:+$("#w-score").value||0,body:$("#w-sum").value,img};
+        const row=await savePost(data);
+        CASES.unshift({sid:row.id,by:author||"익명",kind:data.kind,subj:data.subj,tools:data.tools.length?data.tools:["(미입력)"],t:data.title,team:data.team||"-",score:data.score,date:kst(row.created_at),sum:data.body,before:"-",limit:"-",img,likes:0,shot:[["me","(캡처 없음)"]]});
+        close();go("cases");toast("사례를 올렸습니다");
+      }else{
+        const data={type:"question",author,title:$("#w-t").value,body:$("#w-q").value};
+        const row=await savePost(data);
+        QNA.unshift({sid:row.id,by:author||"익명",t:data.title,date:kst(row.created_at),views:0,q:data.body,ans:[]});
+        close();detail=null;go("qna");toast("질문을 올렸습니다");
+      }
+    }catch(err){saveErr(err)}finally{btn.disabled=false}
+  }
+  if(f.dataset.reply!==undefined){e.preventDefault();e.stopPropagation();
+    const v=$("#reply-in").value.trim();if(!v)return;const x=QNA[+f.dataset.reply];const author=($("#reply-name")?.value||"").trim();
+    const btn=f.querySelector("button[type=submit]");if(btn.disabled)return;btn.disabled=true;
+    try{await savePost({type:"answer",question_key:qKey(x),body:v,author});x.ans.push({by:author||"익명",best:false,a:v});draw();toast("답변을 등록했습니다")}
+    catch(err){saveErr(err)}finally{btn.disabled=false}
+  }
+},true);
+loadPosts();
 
 route();
 </script>
