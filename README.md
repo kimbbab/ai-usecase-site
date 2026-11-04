@@ -17,8 +17,9 @@ Anthropic Console에서 월 사용 한도(spend limit)를 걸어 두는 것을 �
 새로 올린 글은 챗봇도 1분 안에 읽어서 답에 씁니다.
 
 ## AX 뉴스
-`lib/news.mjs`: Google 뉴스 RSS에서 AX·교육·출판 AI 기사를 모아 Claude Haiku 5.5로 관련 기사만 고르고 분류해 Supabase `news` 표에 저장합니다.
-Vercel 예약 실행(`vercel.json`, 매일 22:00 UTC = 한국 07:00)이 `/api/news-refresh`를 부릅니다. 6시간 안에 이미 모았으면 다시 모으지 않습니다.
+`lib/news.mjs`: 네이버 뉴스 검색 API(기본)와 다음 검색 API(카카오, 웹문서 검색에서 v.daum.net 기사만)에서 AX·교육·출판 AI 기사를 모아 Claude Haiku 5.5로 관련 기사만 고르고 분류해 Supabase `news` 표(`portal` = naver/daum)에 저장합니다.
+환경변수: `NAVER_CLIENT_ID`, `NAVER_CLIENT_SECRET`, `KAKAO_REST_API_KEY`. 키가 없는 포털은 건너뜁니다.
+Vercel 예약 실행(`vercel.json`, 매일 22:00 UTC = 한국 07:00)이 `/api/news-refresh`를 부릅니다. 포털마다 6시간 안에 이미 모았으면 다시 모으지 않습니다.
 
 ## 남용 방지
 - IP당 10분에 20회, 하루 1000회(`DAILY_LIMIT`로 변경). 서버마다 따로 세므로 대략적인 제한입니다.
