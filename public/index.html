@@ -324,6 +324,12 @@ ul.clean{margin:0;padding-left:18px;display:grid;gap:6px}
 .nchips button{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:4px 12px;font-size:13px;cursor:pointer}
 .nchips button[aria-pressed="true"]{background:var(--green);border-color:var(--green);color:var(--go-ink);font-weight:700}
 .nrow .t{min-width:0}.nrow .t small{display:block;color:var(--faint);font-size:12.5px;line-height:1.5;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nrow .t a b{font-weight:700}
+.upicks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:12px 22px 2px}
+.upicks button{text-align:left;border:1px solid var(--line);background:var(--soft);border-radius:10px;padding:10px 12px;cursor:pointer;font:inherit;color:var(--ink)}
+.upicks small{display:block;font-size:11.5px;color:var(--sub)}.upicks b{display:block;font-size:14.5px;margin:2px 0}
+.upicks span{display:block;font-size:12.5px;color:var(--sub);line-height:1.45;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+@media (max-width:640px){.upicks{grid-template-columns:1fr}}
 .nday{padding:14px 22px 4px;font-size:13px;font-weight:800;color:var(--sub)}
 .nrow{display:grid;grid-template-columns:76px minmax(0,1fr) auto;gap:12px;align-items:baseline;padding:9px 22px;border-top:1px solid var(--line)}
 .nrow .c{font-size:11.5px;font-weight:700;color:var(--sub);background:var(--soft);border-radius:6px;padding:2px 6px;text-align:center}
@@ -983,7 +989,7 @@ const ICON={
 };
 const ico=k=>`<i><svg viewBox="0 0 24 24">${ICON[k]}</svg></i>`;
 function shortcuts(){
-  const S=[["home","홈","#home"],["lec","강의","#lectures"],["case","활용사례","#cases"],["qna","Q&A","#qna"],["ax","AX 뉴스","#news"],["news","AI 소식","news"],["pen","사례 올리기","w-case"],["qna","질문하기","w-qna"],["ask","AI에게 묻기","ask"]];
+  const S=[["home","홈","#home"],["lec","강의","#lectures"],["case","활용사례","#cases"],["qna","Q&A","#qna"],["ax","AX 뉴스","#news"],["news","AI 소식","#ai"],["pen","사례 올리기","w-case"],["qna","질문하기","w-qna"],["ask","AI에게 묻기","ask"]];
   $("#shortcuts").innerHTML=S.map(([k,l,h])=>h.startsWith("#")?`<a class="sc" href="${h}" ${(h==="#"+view)?'aria-current="page"':""}>${ico(k)}<span>${l}</span></a>`:`<button type="button" class="sc" data-sc="${h}">${ico(k)}<span>${l}</span></button>`).join("");
 }
 document.addEventListener("click",e=>{const t=e.target.closest("[data-sc],[data-htab],[data-ltab],#ai-go");if(!t)return;
@@ -991,14 +997,17 @@ document.addEventListener("click",e=>{const t=e.target.closest("[data-sc],[data-
   if(t.dataset.htab){G.htab=t.dataset.htab;draw();return}
   if(t.dataset.ltab){G.ltab=t.dataset.ltab;draw();return}
   const s=t.dataset.sc;
-  if(s==="news")openNews(NEWS[0].id);
-  else if(s==="w-case")openWrite("case");else if(s==="w-qna")openWrite("qna");
+  if(s==="w-case")openWrite("case");else if(s==="w-qna")openWrite("qna");
   else if(s==="ask"){$("#chat-in").focus();$("#side").scrollIntoView({behavior:"smooth",block:"start"})}
 });
 function homeNews(){
   const tabs=[["news","최신 AI 소식"],["ax","AX 뉴스"],["hot","인기 사례"],["new","새 질문"]];
   let feat,list,more;
-  if(G.htab==="news"){const n=NEWS[0];
+  if(G.htab==="news"&&UPDATES.length){const L=UPDATES.slice(0,8);
+    feat=`<a class="pfeat" href="#ai" style="text-decoration:none"><small>매일 아침 7시 자동 업데이트</small><b>AI 소식 ${UPDATES.length}건</b><span>새 AI 모델·기능 출시 소식</span></a>`;
+    list=L.map(n=>`<li><span class="st">${esc(n.co)}</span><a href="${esc(n.url)}" target="_blank" rel="noopener noreferrer" class="ext">${esc(n.product)}: ${esc(n.summary)}</a><em>${n.published_at?kday(n.published_at).replace(/ \(.\)/,""):""}</em></li>`).join("");
+    more=`<a href="#ai">AI 소식 전체 보기 ›</a>`;
+  }else if(G.htab==="news"){const n=NEWS[0];
     feat=`<button type="button" class="pfeat" data-news="${n.id}"><small>${esc(n.co)}</small><b>${esc(n.model)}</b><span>${esc(n.tag)}</span></button>`;
     list=NEWS.map(n=>`<li><button type="button" data-news="${n.id}">${esc(n.t)}</button><em>${esc(n.co)} · ${esc(n.date)}</em></li>`).join("")+NEWS.map(n=>`<li><button type="button" data-news="${n.id}">편집 업무에서는: ${esc(n.use)}</button><em>${esc(n.model)}</em></li>`).join("");
     more=`<a href="#lectures">관련 강의 보기 ›</a>`;
@@ -1041,12 +1050,12 @@ function statsBox(){const w=QNA.filter(x=>!x.ans.length).length;
   return `<h2>한눈에 보기</h2><div class="stats"><button type="button" onclick="location.hash='lectures'"><b>${LESSONS.length}</b><span>강의</span></button><button type="button" onclick="location.hash='cases'"><b>${CASES.length}</b><span>활용사례</span></button><button type="button" onclick="location.hash='qna'"><b>${QNA.length}</b><span>질문</span></button><button type="button" class="wait" onclick="G.qs='wait';location.hash='qna'"><b>${w}</b><span>답변 대기</span></button></div>`}
 draw=function(){
   $("#top-area").innerHTML="";
-  $("#main").innerHTML=view==="home"?home():view==="news"?axNews():view==="lectures"?lectures():view==="cases"?cases():qna();
+  $("#main").innerHTML=view==="home"?home():view==="news"?axNews():view==="ai"?aiNews():view==="lectures"?lectures():view==="cases"?cases():qna();
   $("#watch").innerHTML=watch();$("#stats").innerHTML=statsBox();
   $("#write").textContent=view==="qna"?"질문하기":"사례 올리기";
   shortcuts();
 };
-route=function(){if(skipRoute){skipRoute=false;return}G.kw="";G.all=false;const h=location.hash.slice(1);view=["lectures","cases","qna","news"].includes(h)?h:"home";detail=null;draw();window.scrollTo(0,0)};
+route=function(){if(skipRoute){skipRoute=false;return}G.kw="";G.all=false;const h=location.hash.slice(1);view=["lectures","cases","qna","news","ai"].includes(h)?h:"home";detail=null;draw();window.scrollTo(0,0)};
 $("#q").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();if(view!=="home"){}draw()}});
 
 /* 챗봇 답의 "출처:" 줄을 눌러서 이동하는 버튼으로 */
@@ -1067,9 +1076,9 @@ function srcLinks(d,text){
 }
 
 /* ===== AX 뉴스: /api/news (매일 아침 7시 자동으로 모음) ===== */
-let NEWSFEED=[],NEWS_LOADED=false;G.ncat="";
+let NEWSFEED=[],UPDATES=[],NEWS_LOADED=false;G.ncat="";G.uco="";
 const mainFeed=()=>NEWSFEED;
-fetch("/api/news").then(r=>r.ok?r.json():{news:[]}).then(d=>{NEWSFEED=d.news||[]}).catch(()=>{}).finally(()=>{NEWS_LOADED=true;if(view==="news"||view==="home")draw()});
+fetch("/api/news").then(r=>r.ok?r.json():{news:[]}).then(d=>{NEWSFEED=d.news||[];UPDATES=d.updates||[]}).catch(()=>{}).finally(()=>{NEWS_LOADED=true;if(view==="news"||view==="ai"||view==="home")draw()});
 const kday=iso=>{const d=new Date(new Date(iso).getTime()+9*3600e3);return `${d.getUTCMonth()+1}월 ${d.getUTCDate()}일 (${"일월화수목금토"[d.getUTCDay()]})`};
 const ktime=iso=>{const d=new Date(new Date(iso).getTime()+9*3600e3);return String(d.getUTCHours()).padStart(2,"0")+":"+String(d.getUTCMinutes()).padStart(2,"0")};
 document.addEventListener("click",e=>{const t=e.target.closest("[data-ncat]");if(t){G.ncat=t.dataset.ncat;draw()}});
@@ -1083,6 +1092,23 @@ function axNews(){
   return `<section class="pbox"><div class="nhead"><h1>AX 뉴스</h1><p>기업·교육·출판의 AI 전환 소식을 매일 아침 7시에 자동으로 모아요. 제목을 누르면 기사가 새 창으로 열려요. (모음: 네이버 뉴스 · 분류: Claude)</p></div>
   <div class="nchips"><button type="button" data-ncat="" aria-pressed="${!G.ncat}">전체 ${F.length}</button>${cats.map(c=>`<button type="button" data-ncat="${c}" aria-pressed="${G.ncat===c}">${c} ${F.filter(n=>n.cat===c).length}</button>`).join("")}</div>
   ${rows||`<div class="empty" style="padding:30px 22px;color:var(--faint)">${NEWS_LOADED?"아직 모은 뉴스가 없어요. 매일 아침 7시에 새 뉴스가 들어와요.":"불러오는 중…"}</div>`}<div style="height:10px"></div></section>`;
+}
+
+/* ===== AI 소식: 새 AI 모델·기능 출시 소식이 매일 쌓임 (cat = "AI 업데이트") ===== */
+document.addEventListener("click",e=>{const t=e.target.closest("[data-uco]");if(t){G.uco=t.dataset.uco;draw()}});
+function aiNews(){
+  const s=srch(),F=UPDATES;
+  const cnt={};F.forEach(n=>cnt[n.co]=(cnt[n.co]||0)+1);
+  const cos=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a]);
+  const L=F.filter(n=>(!G.uco||n.co===G.uco)&&(!s||(n.co+n.product+n.summary+n.title+n.source).includes(s)));
+  let rows="",day="";
+  for(const n of L){const k=n.published_at?kday(n.published_at):"날짜 없음";if(k!==day){day=k;rows+=`<div class="nday">${k}</div>`}
+    rows+=`<div class="nrow"><span class="c">${esc(n.co)}</span><div class="t"><a href="${esc(n.url)}" target="_blank" rel="noopener noreferrer"><b>${esc(n.product)}</b> · ${esc(n.summary)}</a><small>${esc(n.title)}</small></div><em>${esc(n.source)}</em></div>`}
+  const picks=NEWS.map(n=>`<button type="button" data-news="${n.id}"><small>${esc(n.co)} · ${esc(n.state)}</small><b>${esc(n.model)}</b><span>${esc(n.sum)}</span></button>`).join("");
+  return `<section class="pbox"><div class="nhead"><h1>AI 소식</h1><p>새 AI 모델·기능 출시 소식을 매일 아침 7시에 자동으로 모아 쌓아요. 누르면 기사가 새 창으로 열려요. (모음: 네이버 뉴스 · 정리: Claude)</p></div>
+  <div class="upicks">${picks}</div>
+  <div class="nchips"><button type="button" data-uco="" aria-pressed="${!G.uco}">전체 ${F.length}</button>${cos.map(c=>`<button type="button" data-uco="${esc(c)}" aria-pressed="${G.uco===c}">${esc(c)} ${cnt[c]}</button>`).join("")}</div>
+  ${rows||`<div class="empty" style="padding:30px 22px;color:var(--faint)">${NEWS_LOADED?"아직 모은 소식이 없어요. 매일 아침 7시에 새 소식이 들어와요.":"불러오는 중…"}</div>`}<div style="height:10px"></div></section>`;
 }
 
 route();
