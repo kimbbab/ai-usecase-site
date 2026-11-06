@@ -98,8 +98,8 @@ section.drop{outline:2px dashed var(--blue);outline-offset:-6px}
     <div id="log"></div>
     <form id="f">
       <div id="att"></div>
-      <button class="clip" id="clip" type="button" title="파일 첨부 (이미지·PDF·워드·텍스트)">📎</button>
-      <input type="file" id="file" multiple hidden accept="image/png,image/jpeg,image/gif,image/webp,application/pdf,.docx,.txt,.md,.csv,.json,.tex,.html">
+      <button class="clip" id="clip" type="button" title="파일 첨부 (이미지·PDF·워드·엑셀·텍스트, 5MB까지)">📎</button>
+      <input type="file" id="file" multiple hidden accept="image/png,image/jpeg,image/gif,image/webp,application/pdf,.docx,.xlsx,.xls,.txt,.md,.csv,.json,.tex,.html">
       <textarea id="q" rows="1" placeholder="무엇이든 물어보세요 (Enter 보내기 · 📎 파일 첨부)"></textarea>
       <button class="btn" id="go">보내기</button>
     </form>
@@ -241,7 +241,7 @@ async function ask(text) {
   busy = true; go.disabled = true;
   if (!history.length) log.innerHTML = "";
   const texts = atts.filter(a => a.kind === "text").map(a => `\n\n[첨부 파일: ${a.name}]\n${a.text}`).join("");
-  const files = atts.filter(a => a.kind !== "text").map(a => ({ id: a.id, kind: a.kind, name: a.name }));
+  const files = atts.flatMap(a => a.parts || []);
   const msg = { role: "user", content: text + texts, show: text, names: atts.map(a => a.name) };
   if (files.length) msg.files = files;
   history.push(msg);
@@ -289,7 +289,33 @@ $("#reset").onclick = () => { if (busy) return; history = []; pending = []; draw
 let pending = [];
 const att = $("#att"), fileEl = $("#file");
 const TEXT_EXT = /\.(txt|md|csv|json|tex|html?)$/i;
-const MAX_UP = 3_200_000, MAX_TEXT = 100_000;
+const MAX_UP = 3_000_000, MAX_FILE = 5 * 1024 * 1024, MAX_TEXT = 150_000;
+const cut = t => t.length > MAX_TEXT ? t.slice(0, MAX_TEXT) + "\n…(파일이 길어 앞부분만 보냄)" : t;
+const loaded = {};
+const need = (src, test) => test() ? Promise.resolve() : (loaded[src] ||= new Promise((ok, no) => { const sc = document.createElement("script"); sc.src = src; sc.onload = ok; sc.onerror = () => { delete loaded[src]; no(new Error("읽기 도구를 불러오지 못했어요.")); }; document.head.appendChild(sc); }));
+async function upload(blob, name, type) {
+  const r = await fetch("/api/corner-file", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ name, type, data: b64(await blob.arrayBuffer()) }) });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error({ ip: "잠시 파일을 많이 올렸어요. 몇 분 뒤 다시 해 주세요.", too_big: "파일이 너무 커요.", no_key: "아직 Claude 연결(API 키)이 안 되어 있어요." }[j.error] || "파일을 올리지 못했어요.");
+  return { id: j.id, kind: j.kind, name };
+}
+// 서버 한 번에 3MB까지라, 큰 PDF는 쪽 단위로 나눠서 여러 개로 올림
+async function splitPdf(file) {
+  await need("/corner/vendor/pdf-lib.min.js", () => window.PDFLib);
+  const src = await PDFLib.PDFDocument.load(await file.arrayBuffer(), { ignoreEncryption: true });
+  const all = src.getPageIndices();
+  const make = async idx => { const d = await PDFLib.PDFDocument.create(); (await d.copyPages(src, idx)).forEach(pg => d.addPage(pg)); return new Blob([await d.save()], { type: "application/pdf" }); };
+  const out = [];
+  const go = async idx => {
+    const blob = await make(idx);
+    if (blob.size <= MAX_UP) { out.push({ idx, blob }); return; }
+    if (idx.length === 1) throw new Error(`${idx[0] + 1}쪽 한 쪽이 너무 커요.`);
+    const h = Math.ceil(idx.length / 2); await go(idx.slice(0, h)); await go(idx.slice(h));
+  };
+  const n = Math.max(2, Math.ceil(file.size / (MAX_UP * 0.8))), per = Math.ceil(all.length / n);
+  for (let i = 0; i < all.length; i += per) await go(all.slice(i, i + per));
+  return out.map(o => ({ blob: o.blob, label: `${o.idx[0] + 1}~${o.idx[o.idx.length - 1] + 1}쪽` }));
+}
 function flash(m) { const w = document.createElement("div"); w.className = "msg bot"; w.innerHTML = `<span class="wait"></span>`; w.firstChild.textContent = m; log.appendChild(w); log.scrollTop = log.scrollHeight; setTimeout(() => w.remove(), 5000); }
 function drawAtt() {
   att.innerHTML = "";
@@ -315,20 +341,30 @@ async function addFile(file) {
   const a = { name: file.name || "붙여넣은 이미지.png", busy: true };
   pending.push(a); drawAtt();
   try {
+    if (file.size > MAX_FILE) throw new Error("5MB까지 올릴 수 있어요.");
     if (/\.docx$/i.test(a.name)) {
       if (!window.mammoth) throw new Error("워드 읽기 준비 중이에요. 잠시 뒤 다시 해 주세요.");
       const r = await mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() });
-      Object.assign(a, { kind: "text", text: r.value.slice(0, MAX_TEXT) });
+      Object.assign(a, { kind: "text", text: cut(r.value) });
+    } else if (/\.xlsx?$/i.test(a.name)) {
+      await need("/corner/vendor/xlsx.full.min.js", () => window.XLSX);
+      const wb = XLSX.read(await file.arrayBuffer(), { type: "array" });
+      const text = wb.SheetNames.map(n => `[시트: ${n}]\n` + XLSX.utils.sheet_to_csv(wb.Sheets[n], { blankrows: false })).join("\n\n");
+      Object.assign(a, { kind: "text", text: cut(text) });
     } else if (TEXT_EXT.test(a.name) || file.type.startsWith("text/")) {
-      Object.assign(a, { kind: "text", text: (await file.text()).slice(0, MAX_TEXT) });
-    } else if (/^image\/(png|jpeg|gif|webp)$/.test(file.type) || file.type === "application/pdf") {
-      const blob = file.type === "application/pdf" ? file : await shrinkImage(file);
-      if (blob.size > MAX_UP) throw new Error(file.type === "application/pdf" ? "PDF는 3MB까지 올릴 수 있어요. 필요한 쪽만 나눠서 올려 주세요." : "이미지가 너무 커요.");
-      const r = await fetch("/api/corner-file", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ name: a.name, type: blob.type || file.type, data: b64(await blob.arrayBuffer()) }) });
-      const j = await r.json().catch(() => ({}));
-      if (!r.ok) throw new Error({ ip: "잠시 파일을 많이 올렸어요. 몇 분 뒤 다시 해 주세요.", too_big: "파일이 너무 커요(3MB까지).", no_key: "아직 Claude 연결(API 키)이 안 되어 있어요." }[j.error] || "파일을 올리지 못했어요.");
-      Object.assign(a, { kind: j.kind, id: j.id });
-    } else throw new Error("이 형식은 아직 못 읽어요. 이미지·PDF·워드(docx)·텍스트 파일을 올려 주세요. (한글 hwp는 PDF로 저장해서 올려 주세요)");
+      Object.assign(a, { kind: "text", text: cut(await file.text()) });
+    } else if (file.type === "application/pdf") {
+      if (file.size <= MAX_UP) a.parts = [await upload(file, a.name, "application/pdf")];
+      else {
+        const pieces = await splitPdf(file);
+        a.parts = [];
+        for (const pc of pieces) a.parts.push(await upload(pc.blob, `${a.name} (${pc.label})`, "application/pdf"));
+      }
+    } else if (/^image\/(png|jpeg|gif|webp)$/.test(file.type)) {
+      const blob = await shrinkImage(file);
+      if (blob.size > MAX_UP) throw new Error("이미지가 너무 커요.");
+      a.parts = [await upload(blob, a.name, blob.type || file.type)];
+    } else throw new Error("이 형식은 아직 못 읽어요. 이미지·PDF·워드·엑셀·텍스트 파일을 올려 주세요. (한글 hwp는 PDF로 저장해서 올려 주세요)");
     a.busy = false;
   } catch (e) {
     pending = pending.filter(p => p !== a);
