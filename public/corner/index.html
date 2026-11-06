@@ -51,8 +51,17 @@ section+section{border-left:1px solid var(--line)}
 .empty b{display:block;color:var(--ink);font-size:16px;margin-bottom:6px}
 .chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:12px}
 .chips button{border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:5px 12px;font-size:13px;cursor:pointer}
-form{display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--line)}
-#q{flex:1;resize:none;border:1px solid var(--line);border-radius:10px;padding:9px 12px;background:var(--bg);max-height:180px;min-height:44px}
+form{display:flex;flex-wrap:wrap;gap:8px;padding:12px 16px;border-top:1px solid var(--line)}
+#att{display:flex;flex-wrap:wrap;gap:6px;width:100%}
+#att:empty{display:none}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:12px;border:1px solid var(--line);background:var(--soft);border-radius:8px;padding:3px 8px;max-width:100%}
+.chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:220px}
+.chip button{border:0;background:none;cursor:pointer;color:var(--faint);padding:0 2px;font-size:14px;line-height:1}
+.chip.busy{opacity:.6}
+.msg.user .chips2{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px}
+.clip{border:1px solid var(--line);background:var(--bg);border-radius:10px;width:44px;cursor:pointer;font-size:18px;color:var(--sub)}
+section.drop{outline:2px dashed var(--blue);outline-offset:-6px}
+#q{flex:1;min-width:0;resize:none;border:1px solid var(--line);border-radius:10px;padding:9px 12px;background:var(--bg);max-height:180px;min-height:44px}
 .btn{border:0;background:var(--blue);color:var(--blue-ink);border-radius:10px;padding:0 16px;cursor:pointer;font-weight:600}
 .btn:disabled{opacity:.5;cursor:default}
 .ghost{border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:3px 10px;font-size:13px;cursor:pointer}
@@ -88,7 +97,10 @@ form{display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--line)}
     </div>
     <div id="log"></div>
     <form id="f">
-      <textarea id="q" rows="1" placeholder="무엇이든 물어보세요 (Enter 보내기, Shift+Enter 줄바꿈)"></textarea>
+      <div id="att"></div>
+      <button class="clip" id="clip" type="button" title="파일 첨부 (이미지·PDF·워드·텍스트)">📎</button>
+      <input type="file" id="file" multiple hidden accept="image/png,image/jpeg,image/gif,image/webp,application/pdf,.docx,.txt,.md,.csv,.json,.tex,.html">
+      <textarea id="q" rows="1" placeholder="무엇이든 물어보세요 (Enter 보내기 · 📎 파일 첨부)"></textarea>
       <button class="btn" id="go">보내기</button>
     </form>
   </section>
@@ -96,6 +108,7 @@ form{display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--line)}
 <script src="/corner/vendor/diff_match_patch.js"></script>
 <script src="/corner/vendor/marked.min.js"></script>
 <script src="/corner/vendor/purify.min.js"></script>
+<script src="/corner/vendor/mammoth.browser.min.js" defer></script>
 <script>
 const $ = s => document.querySelector(s);
 const store = {
@@ -197,12 +210,19 @@ function render() {
     SAMPLES.forEach(s => { const b = document.createElement("button"); b.type = "button"; b.textContent = s; b.onclick = () => { q.value = s; q.focus(); }; chips.appendChild(b); });
     return;
   }
-  history.forEach(m => add(m.role, m.content));
+  history.forEach(m => add(m.role, m.show ?? m.content, m.names));
 }
-function add(role, text) {
+function add(role, text, names) {
   const d = document.createElement("div");
   d.className = "msg " + (role === "user" ? "user" : "bot");
-  if (role === "user") d.textContent = text; else { d.innerHTML = md(text); tools(d, text); }
+  if (role === "user") {
+    if (names && names.length) {
+      const c = document.createElement("div"); c.className = "chips2";
+      names.forEach(n => { const x = document.createElement("span"); x.className = "chip"; x.textContent = "📄 " + n; c.appendChild(x); });
+      d.appendChild(c);
+    }
+    d.appendChild(document.createTextNode(text));
+  } else { d.innerHTML = md(text); tools(d, text); }
   log.appendChild(d); log.scrollTop = log.scrollHeight;
   return d;
 }
@@ -215,15 +235,22 @@ function tools(d, text) {
 const ERR = { ip: "잠시 질문이 많았어요. 몇 분 뒤 다시 해 주세요.", daily: "오늘 쓸 수 있는 양을 다 썼어요. 내일 다시 써 주세요.", no_key: "아직 Claude 연결(API 키)이 안 되어 있어요.", bad_messages: "대화가 너무 길어요. '새 대화'를 눌러 주세요." };
 
 async function ask(text) {
-  if (busy || !text.trim()) return;
+  if (busy) return;
+  const atts = pending.slice();
+  if (!text.trim()) text = "첨부한 파일을 살펴봐 줘.";
   busy = true; go.disabled = true;
   if (!history.length) log.innerHTML = "";
-  history.push({ role: "user", content: text });
-  add("user", text);
+  const texts = atts.filter(a => a.kind === "text").map(a => `\n\n[첨부 파일: ${a.name}]\n${a.text}`).join("");
+  const files = atts.filter(a => a.kind !== "text").map(a => ({ id: a.id, kind: a.kind, name: a.name }));
+  const msg = { role: "user", content: text + texts, show: text, names: atts.map(a => a.name) };
+  if (files.length) msg.files = files;
+  history.push(msg);
+  pending = []; drawAtt();
+  add("user", text, msg.names);
   const d = add("assistant", ""); d.innerHTML = '<span class="wait">생각하는 중…</span>';
   let out = "";
   try {
-    const r = await fetch("/api/corner-chat", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ messages: history.slice(-30) }) });
+    const r = await fetch("/api/corner-chat", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ messages: history.slice(-30).map(m => m.files ? { role: m.role, content: m.content, files: m.files } : { role: m.role, content: m.content }) }) });
     if (!r.ok) { const j = await r.json().catch(() => ({})); throw new Error(ERR[j.error] || "답을 받지 못했어요. 잠시 뒤 다시 해 주세요."); }
     const rd = r.body.getReader(), dec = new TextDecoder();
     let last = 0;
@@ -233,22 +260,89 @@ async function ask(text) {
       out += dec.decode(value, { stream: true });
       if (Date.now() - last > 80) { d.innerHTML = md(out.replace("[[ERROR]]", "")); log.scrollTop = log.scrollHeight; last = Date.now(); }
     }
+    if (out.includes("[[FILE_GONE]]")) throw new Error("예전에 올린 파일의 보관 기간(7일)이 지났어요. '새 대화'를 눌러 다시 시작해 주세요.");
     if (out.includes("[[ERROR]]")) { out = out.replace("[[ERROR]]", "").trim(); if (!out) throw new Error("답을 받지 못했어요. 잠시 뒤 다시 해 주세요."); out += "\n\n(중간에 끊겼어요.)"; }
     d.innerHTML = md(out); tools(d, out);
     history.push({ role: "assistant", content: out });
     store.set("corner.chat", history);
   } catch (e) {
     history.pop();
-    d.innerHTML = `<span class="wait">${e.message}</span>`;
-    q.value = text;
+    d.innerHTML = ""; const w = document.createElement("span"); w.className = "wait"; w.textContent = e.message; d.appendChild(w);
+    q.value = msg.show; pending = atts; drawAtt();
   }
   busy = false; go.disabled = false; log.scrollTop = log.scrollHeight;
 }
-$("#f").addEventListener("submit", e => { e.preventDefault(); const t = q.value; q.value = ""; grow(); ask(t); });
+$("#f").addEventListener("submit", e => {
+  e.preventDefault(); const t = q.value;
+  if (busy) return;
+  if (pending.some(a => a.busy)) { flash("파일을 올리는 중이에요. 잠시만요."); return; }
+  if (!t.trim() && !pending.length) return;
+  q.value = ""; grow(); ask(t);
+});
 q.addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); $("#f").requestSubmit(); } });
 const grow = () => { q.style.height = "auto"; q.style.height = Math.min(q.scrollHeight, 180) + "px"; };
 q.addEventListener("input", grow);
-$("#reset").onclick = () => { if (busy) return; history = []; store.set("corner.chat", history); render(); };
+$("#reset").onclick = () => { if (busy) return; history = []; pending = []; drawAtt(); store.set("corner.chat", history); render(); };
+
+/* ---------- 파일 첨부 ---------- */
+// 이미지·PDF는 서버를 거쳐 Claude 파일 보관함(7일)에 올리고, 워드·텍스트는 글자만 뽑아 질문에 붙임
+let pending = [];
+const att = $("#att"), fileEl = $("#file");
+const TEXT_EXT = /\.(txt|md|csv|json|tex|html?)$/i;
+const MAX_UP = 3_200_000, MAX_TEXT = 100_000;
+function flash(m) { const w = document.createElement("div"); w.className = "msg bot"; w.innerHTML = `<span class="wait"></span>`; w.firstChild.textContent = m; log.appendChild(w); log.scrollTop = log.scrollHeight; setTimeout(() => w.remove(), 5000); }
+function drawAtt() {
+  att.innerHTML = "";
+  pending.forEach(a => {
+    const c = document.createElement("span"); c.className = "chip" + (a.busy ? " busy" : "");
+    const n = document.createElement("span"); n.textContent = (a.busy ? "⏳ " : "📄 ") + a.name; c.appendChild(n);
+    const x = document.createElement("button"); x.type = "button"; x.textContent = "×"; x.title = "빼기";
+    x.onclick = () => { pending = pending.filter(p => p !== a); drawAtt(); };
+    c.appendChild(x); att.appendChild(c);
+  });
+}
+const b64 = buf => { let s = ""; const u = new Uint8Array(buf); for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(s); };
+async function shrinkImage(file) {
+  if (file.type === "image/gif" || file.size < 1_500_000) return file;
+  const img = await createImageBitmap(file);
+  const k = Math.min(1, 2000 / Math.max(img.width, img.height));
+  const cv = document.createElement("canvas"); cv.width = Math.round(img.width * k); cv.height = Math.round(img.height * k);
+  cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height);
+  return await new Promise(r => cv.toBlob(r, "image/jpeg", 0.85));
+}
+async function addFile(file) {
+  if (pending.length >= 5) { flash("한 번에 5개까지 붙일 수 있어요."); return; }
+  const a = { name: file.name || "붙여넣은 이미지.png", busy: true };
+  pending.push(a); drawAtt();
+  try {
+    if (/\.docx$/i.test(a.name)) {
+      if (!window.mammoth) throw new Error("워드 읽기 준비 중이에요. 잠시 뒤 다시 해 주세요.");
+      const r = await mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() });
+      Object.assign(a, { kind: "text", text: r.value.slice(0, MAX_TEXT) });
+    } else if (TEXT_EXT.test(a.name) || file.type.startsWith("text/")) {
+      Object.assign(a, { kind: "text", text: (await file.text()).slice(0, MAX_TEXT) });
+    } else if (/^image\/(png|jpeg|gif|webp)$/.test(file.type) || file.type === "application/pdf") {
+      const blob = file.type === "application/pdf" ? file : await shrinkImage(file);
+      if (blob.size > MAX_UP) throw new Error(file.type === "application/pdf" ? "PDF는 3MB까지 올릴 수 있어요. 필요한 쪽만 나눠서 올려 주세요." : "이미지가 너무 커요.");
+      const r = await fetch("/api/corner-file", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ name: a.name, type: blob.type || file.type, data: b64(await blob.arrayBuffer()) }) });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error({ ip: "잠시 파일을 많이 올렸어요. 몇 분 뒤 다시 해 주세요.", too_big: "파일이 너무 커요(3MB까지).", no_key: "아직 Claude 연결(API 키)이 안 되어 있어요." }[j.error] || "파일을 올리지 못했어요.");
+      Object.assign(a, { kind: j.kind, id: j.id });
+    } else throw new Error("이 형식은 아직 못 읽어요. 이미지·PDF·워드(docx)·텍스트 파일을 올려 주세요. (한글 hwp는 PDF로 저장해서 올려 주세요)");
+    a.busy = false;
+  } catch (e) {
+    pending = pending.filter(p => p !== a);
+    flash(`${a.name}: ${e.message}`);
+  }
+  drawAtt();
+}
+$("#clip").onclick = () => fileEl.click();
+fileEl.onchange = () => { [...fileEl.files].forEach(addFile); fileEl.value = ""; };
+q.addEventListener("paste", e => { const fs = [...(e.clipboardData?.files || [])]; if (fs.length) { e.preventDefault(); fs.forEach(addFile); } });
+const chatSec = $("#f").closest("section");
+chatSec.addEventListener("dragover", e => { if ([...e.dataTransfer.types].includes("Files")) { e.preventDefault(); chatSec.classList.add("drop"); } });
+chatSec.addEventListener("dragleave", e => { if (!chatSec.contains(e.relatedTarget)) chatSec.classList.remove("drop"); });
+chatSec.addEventListener("drop", e => { e.preventDefault(); chatSec.classList.remove("drop"); [...e.dataTransfer.files].forEach(addFile); });
 render();
 </script>
 </body>

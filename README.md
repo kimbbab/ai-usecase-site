@@ -38,6 +38,7 @@ ANTHROPIC_API_KEY=... npm start   # http://localhost:3000
 ## 코너명 회의 페이지 (/corner/)
 - 왼쪽 회의록: 접속한 사람 모두가 함께 고침. 2.5초마다 새 판을 받아 내 수정과 합침(diff-match-patch). 저장은 Supabase `corner_minutes` 표에 고칠 때마다 한 줄씩 쌓임(맨 끝 줄이 현재 회의록, `base_id` unique로 동시 저장 충돌 감지). 예전 판은 표에서 볼 수 있음.
 - 오른쪽 챗봇: Claude Opus 5.5(`claude-opus-5-5`, effort medium), 각자 브라우저에만 대화 저장, 회의록은 보내지 않음. `lib/corner.mjs`, `/api/corner-chat`. IP당 10분 40회, 하루 `CORNER_DAILY_LIMIT`(기본 400)회.
+- 챗봇 파일 첨부(📎·끌어놓기·붙여넣기, 한 번에 5개): 이미지·PDF는 `/api/corner-file`이 Anthropic Files API에 7일 보관으로 올림(파일당 3.2MB, Vercel 요청 4.5MB 제한 때문). 워드(docx, mammoth)·텍스트 파일은 브라우저에서 글자만 뽑아 질문에 붙임. hwp는 미지원.
 - 표 만들기(Supabase SQL):
 ```sql
 create table public.corner_minutes (
