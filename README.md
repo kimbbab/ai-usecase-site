@@ -34,3 +34,20 @@ Vercel 예약 실행(`vercel.json`, 매일 22:00 UTC = 한국 07:00)이 `/api/ne
 npm install
 ANTHROPIC_API_KEY=... npm start   # http://localhost:3000
 ```
+
+## 코너명 회의 페이지 (/corner/)
+- 왼쪽 회의록: 접속한 사람 모두가 함께 고침. 2.5초마다 새 판을 받아 내 수정과 합침(diff-match-patch). 저장은 Supabase `corner_minutes` 표에 고칠 때마다 한 줄씩 쌓임(맨 끝 줄이 현재 회의록, `base_id` unique로 동시 저장 충돌 감지). 예전 판은 표에서 볼 수 있음.
+- 오른쪽 챗봇: Claude Opus 5.5(`claude-opus-5-5`, effort medium), 각자 브라우저에만 대화 저장, 회의록은 보내지 않음. `lib/corner.mjs`, `/api/corner-chat`. IP당 10분 40회, 하루 `CORNER_DAILY_LIMIT`(기본 400)회.
+- 표 만들기(Supabase SQL):
+```sql
+create table public.corner_minutes (
+  id bigint generated always as identity primary key,
+  base_id bigint not null unique,
+  body text not null check (char_length(body) <= 50000),
+  author text not null default '익명' check (char_length(author) <= 20),
+  created_at timestamptz not null default now()
+);
+alter table public.corner_minutes enable row level security;
+create policy "anyone can read corner minutes" on public.corner_minutes for select to anon using (true);
+create policy "anyone can add corner minutes" on public.corner_minutes for insert to anon with check (true);
+```

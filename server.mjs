@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import { handleChat, hasKey, readJson } from "./lib/chat.mjs";
 import { handlePosts, hasStore } from "./lib/store.mjs";
 import { handleNews, handleNewsRefresh } from "./lib/news.mjs";
+import { handleCornerMinutes, handleCornerChat } from "./lib/corner.mjs";
 
 const PUBLIC = path.join(path.dirname(fileURLToPath(import.meta.url)), "public");
 const PORT = process.env.PORT || 3000;
@@ -15,6 +16,7 @@ function serveStatic(req, res) {
   let p;
   try { p = decodeURIComponent(new URL(req.url, "http://x").pathname); } catch { res.writeHead(400).end(); return; }
   if (p === "/") p = "/index.html";
+  if (p.endsWith("/")) p += "index.html";
   const file = path.normalize(path.join(PUBLIC, p));
   if (!file.startsWith(PUBLIC + path.sep)) { res.writeHead(403).end(); return; }
   fs.readFile(file, (err, data) => {
@@ -31,6 +33,8 @@ http.createServer((req, res) => {
   if (url === "/api/posts") return void handlePosts(req, res, readJson);
   if (url === "/api/news") return void handleNews(req, res);
   if (url === "/api/news-refresh") return void handleNewsRefresh(req, res);
+  if (url === "/api/corner-minutes") return void handleCornerMinutes(req, res, readJson);
+  if (url === "/api/corner-chat") return void handleCornerChat(req, res, readJson);
   if (url === "/healthz") return void res.writeHead(200).end("ok");
   if (req.method !== "GET" && req.method !== "HEAD") return void res.writeHead(405).end();
   serveStatic(req, res);
