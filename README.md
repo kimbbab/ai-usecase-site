@@ -52,3 +52,18 @@ alter table public.corner_minutes enable row level security;
 create policy "anyone can read corner minutes" on public.corner_minutes for select to anon using (true);
 create policy "anyone can add corner minutes" on public.corner_minutes for insert to anon with check (true);
 ```
+- 함께 채팅(오른쪽 '함께 채팅' 탭, `lib/room.mjs`, `/api/corner-room`): 참가자 모두의 단체 채팅. 글에 `@엑사원` 또는 `@클로드`가 있으면 최근 40개 대화를 보고 그 AI가 답함. 엑사원은 K-EXAONE 2.5(`k-exaone_v2.5`, `https://api.exaone.ai/v1/chat/completions`, OpenAI 형식, reasoning_effort low), 환경변수 `EXAONE_API_KEY`. 클로드는 Opus 5.5(effort low). AI 부르기 IP당 10분 40번, 하루 `ROOM_DAILY_LIMIT`(기본 400)번.
+- 함께 채팅 표(Supabase SQL):
+```sql
+create table public.corner_chat (
+  id bigint generated always as identity primary key,
+  author text not null check (char_length(author) between 1 and 20),
+  body text not null check (char_length(body) between 1 and 20000),
+  bot text check (bot in ('claude','exaone')),
+  reply_to bigint,
+  created_at timestamptz not null default now()
+);
+alter table public.corner_chat enable row level security;
+create policy "anyone can read corner chat" on public.corner_chat for select to anon using (true);
+create policy "anyone can add corner chat" on public.corner_chat for insert to anon with check (true);
+```

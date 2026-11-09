@@ -60,6 +60,27 @@ form{display:flex;flex-wrap:wrap;gap:8px;padding:12px 16px;border-top:1px solid 
 .chip.busy{opacity:.6}
 .msg.user .chips2{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px}
 .clip{border:1px solid var(--line);background:var(--bg);border-radius:10px;width:44px;cursor:pointer;font-size:18px;color:var(--sub)}
+.panel{flex:1;display:flex;flex-direction:column;min-height:0}
+.panel[hidden]{display:none}
+.tabs{display:flex;gap:4px}
+.tab{border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:3px 12px;font-size:14px;font-weight:600;cursor:pointer;color:var(--sub)}
+.tab.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+#rlog{flex:1;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:10px}
+.rm{display:flex;flex-direction:column;max-width:88%;align-self:flex-start}
+.rm.mine{align-self:flex-end;align-items:flex-end}
+.rm .who{font-size:12px;color:var(--sub);margin:0 4px 2px}
+.rm .who b{color:var(--ink);font-weight:600}
+.rm .bub{padding:8px 12px;border-radius:12px;background:var(--soft);word-break:break-word;white-space:pre-wrap}
+.rm.mine .bub{background:var(--me)}
+.rm.bot .bub{white-space:normal;border:1px solid var(--line);background:var(--bg)}
+.rm.bot .bub p{margin:.3em 0} .rm.bot .bub ul,.rm.bot .bub ol{margin:.3em 0;padding-left:1.3em}
+.rm.bot .bub table{border-collapse:collapse;font-size:14px} .rm.bot .bub th,.rm.bot .bub td{border:1px solid var(--line);padding:3px 6px}
+.badge{font-size:11px;padding:1px 6px;border-radius:6px;margin-left:4px;color:#fff}
+.badge.claude{background:#c26a43} .badge.exaone{background:#a50034}
+.typing{font-size:13px;color:var(--faint);padding:0 4px}
+.callers{display:flex;align-items:center;gap:6px;width:100%;font-size:12px;color:var(--faint)}
+.callers button{border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:2px 10px;font-size:12px;cursor:pointer}
+#rq{flex:1;min-width:0;resize:none;border:1px solid var(--line);border-radius:10px;padding:9px 12px;background:var(--bg);max-height:180px;min-height:44px}
 section.drop{outline:2px dashed var(--blue);outline-offset:-6px}
 #q{flex:1;min-width:0;resize:none;border:1px solid var(--line);border-radius:10px;padding:9px 12px;background:var(--bg);max-height:180px;min-height:44px}
 .btn{border:0;background:var(--blue);color:var(--blue-ink);border-radius:10px;padding:0 16px;cursor:pointer;font-weight:600}
@@ -91,10 +112,20 @@ section.drop{outline:2px dashed var(--blue);outline-offset:-6px}
   </section>
   <section>
     <div class="bar">
-      <h2>Claude</h2><span class="hint">Opus 5.5 · 나만 보는 대화</span>
+      <div class="tabs"><button type="button" class="tab" data-tab="room">함께 채팅</button><button type="button" class="tab" data-tab="me">나만 Claude</button></div>
+      <span class="hint" id="tabHint"></span>
       <div class="sp"></div>
       <button class="ghost" id="reset" type="button">새 대화</button>
     </div>
+    <div class="panel" id="roomPanel">
+      <div id="rlog"></div>
+      <form id="rf">
+        <div class="callers"><span>AI 부르기</span><button type="button" data-call="@엑사원 ">@엑사원</button><button type="button" data-call="@클로드 ">@클로드</button></div>
+        <textarea id="rq" rows="1" placeholder="모두에게 보내기 (Enter) · @엑사원 @클로드로 AI 부르기"></textarea>
+        <button class="btn" id="rgo">보내기</button>
+      </form>
+    </div>
+    <div class="panel" id="mePanel">
     <div id="log"></div>
     <form id="f">
       <div id="att"></div>
@@ -103,6 +134,7 @@ section.drop{outline:2px dashed var(--blue);outline-offset:-6px}
       <textarea id="q" rows="1" placeholder="무엇이든 물어보세요 (Enter 보내기 · 📎 파일 첨부)"></textarea>
       <button class="btn" id="go">보내기</button>
     </form>
+    </div>
   </section>
 </main>
 <script src="/corner/vendor/diff_match_patch.js"></script>
@@ -378,8 +410,91 @@ q.addEventListener("paste", e => { const fs = [...(e.clipboardData?.files || [])
 const chatSec = $("#f").closest("section");
 chatSec.addEventListener("dragover", e => { if ([...e.dataTransfer.types].includes("Files")) { e.preventDefault(); chatSec.classList.add("drop"); } });
 chatSec.addEventListener("dragleave", e => { if (!chatSec.contains(e.relatedTarget)) chatSec.classList.remove("drop"); });
-chatSec.addEventListener("drop", e => { e.preventDefault(); chatSec.classList.remove("drop"); [...e.dataTransfer.files].forEach(addFile); });
+chatSec.addEventListener("drop", e => { e.preventDefault(); chatSec.classList.remove("drop"); tab("me"); [...e.dataTransfer.files].forEach(addFile); });
 render();
+
+/* ---------------- 함께 채팅 (참가자 + @엑사원·@클로드) ---------------- */
+const rlog = $("#rlog"), rq = $("#rq"), rgo = $("#rgo");
+const BOTNAME = { claude: "클로드", exaone: "엑사원" };
+const BOTRE = { claude: /@\s*(클로드|claude)/i, exaone: /@\s*(엑사원|exaone)/i };
+let rows = [], lastId = 0, rTimer = null, rSending = false;
+function tab(t) {
+  document.querySelectorAll(".tab").forEach(b => b.classList.toggle("on", b.dataset.tab === t));
+  $("#roomPanel").hidden = t !== "room"; $("#mePanel").hidden = t !== "me";
+  $("#reset").hidden = t !== "me";
+  $("#tabHint").textContent = t === "room" ? "모두 함께 · AI는 부를 때만 답해요" : "Opus 5.5 · 나만 보는 대화";
+  store.set("corner.tab", t);
+  if (t === "room") { rlog.scrollTop = rlog.scrollHeight; }
+}
+document.querySelectorAll(".tab").forEach(b => b.onclick = () => tab(b.dataset.tab));
+tab(store.get("corner.tab", "room"));
+function drawRoom() {
+  const atBottom = rlog.scrollHeight - rlog.scrollTop - rlog.clientHeight < 80;
+  rlog.innerHTML = "";
+  if (!rows.length) rlog.innerHTML = '<div class="empty"><b>함께 쓰는 채팅방이에요</b>여기 쓴 글은 접속한 모두에게 보여요.<br>AI 의견이 필요하면 <b style="display:inline">@엑사원</b> 또는 <b style="display:inline">@클로드</b>를 붙여 부르세요.</div>';
+  const me = myName();
+  rows.forEach(r => {
+    const d = document.createElement("div");
+    d.className = "rm" + (r.bot ? " bot" : r.author === me ? " mine" : "");
+    const who = document.createElement("div"); who.className = "who";
+    const b = document.createElement("b"); b.textContent = r.author; who.appendChild(b);
+    if (r.bot) { const g = document.createElement("span"); g.className = "badge " + r.bot; g.textContent = "AI"; who.appendChild(g); }
+    who.appendChild(document.createTextNode(" " + timeOf(r.created_at)));
+    const bub = document.createElement("div"); bub.className = "bub";
+    if (r.bot) bub.innerHTML = md(r.body); else bub.textContent = r.body;
+    d.append(who, bub); rlog.appendChild(d);
+  });
+  // 불렀는데 아직 답이 없는 AI 표시 (3분 안)
+  const answered = new Set(rows.filter(r => r.bot).map(r => r.reply_to + ":" + r.bot));
+  const waiting = new Set();
+  rows.filter(r => !r.bot && Date.now() - new Date(r.created_at) < 180000).forEach(r => {
+    for (const k in BOTRE) if (BOTRE[k].test(r.body) && !answered.has(r.id + ":" + k)) waiting.add(BOTNAME[k]);
+  });
+  if (waiting.size) { const t = document.createElement("div"); t.className = "typing"; t.textContent = [...waiting].join(", ") + "이(가) 답을 쓰는 중…"; rlog.appendChild(t); }
+  if (atBottom) rlog.scrollTop = rlog.scrollHeight;
+}
+function addRows(list, bump = true) {
+  let changed = false;
+  for (const r of list || []) if (!rows.some(x => x.id === r.id)) { rows.push(r); changed = true; if (bump) lastId = Math.max(lastId, r.id); }
+  if (changed) { rows.sort((a, b) => a.id - b.id); if (rows.length > 300) rows = rows.slice(-300); }
+  return changed;
+}
+async function pollRoom() {
+  clearTimeout(rTimer);
+  try {
+    const r = await fetch("/api/corner-room" + (lastId ? "?after=" + lastId : ""), { cache: "no-store" });
+    if (r.ok) { const j = await r.json(); if (addRows(j.rows) || !lastId) drawRoom(); }
+    else if (r.status === 503) rlog.innerHTML = '<div class="empty">채팅 저장소가 아직 연결되지 않았어요.</div>';
+  } catch {}
+  if (rows.some(r => !r.bot && Date.now() - new Date(r.created_at) < 180000)) drawRoom(); // 답 기다리는 표시 갱신
+  rTimer = setTimeout(pollRoom, document.hidden ? 8000 : 2000);
+}
+async function sendRoom() {
+  const text = rq.value.trim();
+  if (!text || rSending) return;
+  if (!nameEl.value.trim()) { nameEl.focus(); nameEl.placeholder = "이름을 먼저!"; return; }
+  rSending = true; rgo.disabled = true; rq.value = ""; rgrow();
+  const temp = { id: Number.MAX_SAFE_INTEGER, author: myName(), body: text, created_at: new Date().toISOString(), temp: true };
+  rows.push(temp); drawRoom(); rlog.scrollTop = rlog.scrollHeight;
+  try {
+    const p = fetch("/api/corner-room", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ author: myName(), body: text }) });
+    const calls = Object.keys(BOTRE).some(k => BOTRE[k].test(text));
+    if (calls) { setTimeout(() => { rSending = false; rgo.disabled = false; }, 600); } // AI 답 기다리는 동안에도 계속 쓸 수 있게
+    const r = await p; const j = await r.json().catch(() => ({}));
+    rows = rows.filter(x => x !== temp);
+    if (!r.ok) { rq.value = text; flashRoom(j.error === "too_many" ? "잠시 너무 빨리 보냈어요." : "보내지 못했어요. 다시 해 주세요."); }
+    else { addRows([j.row, ...(j.replies || [])], false); pollRoom(); if (j.botError) flashRoom("AI를 너무 자주 불렀어요. 몇 분 뒤 다시 불러 주세요."); }
+  } catch { rows = rows.filter(x => x !== temp); rq.value = text; flashRoom("보내지 못했어요. 다시 해 주세요."); }
+  drawRoom(); rSending = false; rgo.disabled = false;
+}
+function flashRoom(m) { const t = document.createElement("div"); t.className = "typing"; t.textContent = m; rlog.appendChild(t); rlog.scrollTop = rlog.scrollHeight; setTimeout(() => t.remove(), 5000); }
+const rgrow = () => { rq.style.height = "auto"; rq.style.height = Math.min(rq.scrollHeight, 180) + "px"; };
+rq.addEventListener("input", rgrow);
+$("#rf").addEventListener("submit", e => { e.preventDefault(); sendRoom(); });
+rq.addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); sendRoom(); } });
+document.querySelectorAll("[data-call]").forEach(b => b.onclick = () => { const c = b.dataset.call; if (!rq.value.includes(c.trim())) rq.value = c + rq.value; rq.focus(); rgrow(); });
+document.addEventListener("visibilitychange", () => { if (!document.hidden) pollRoom(); });
+pollRoom();
 </script>
 </body>
 </html>
