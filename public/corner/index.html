@@ -112,7 +112,7 @@ section.drop{outline:2px dashed var(--blue);outline-offset:-6px}
   </section>
   <section>
     <div class="bar">
-      <div class="tabs"><button type="button" class="tab" data-tab="room">함께 채팅</button><button type="button" class="tab" data-tab="me">나만 Claude</button></div>
+      <div class="tabs"><button type="button" class="tab" data-tab="room">함께 채팅</button><button type="button" class="tab" data-tab="me">나만 엑사원</button></div>
       <span class="hint" id="tabHint"></span>
       <div class="sp"></div>
       <button class="ghost" id="reset" type="button">새 대화</button>
@@ -120,8 +120,8 @@ section.drop{outline:2px dashed var(--blue);outline-offset:-6px}
     <div class="panel" id="roomPanel">
       <div id="rlog"></div>
       <form id="rf">
-        <div class="callers"><span>AI 부르기</span><button type="button" data-call="@엑사원 ">@엑사원</button><button type="button" data-call="@클로드 ">@클로드</button></div>
-        <textarea id="rq" rows="1" placeholder="모두에게 보내기 (Enter) · @엑사원 @클로드로 AI 부르기"></textarea>
+        <div class="callers"><span>AI 부르기</span><button type="button" data-call="@엑사원 ">@엑사원</button></div>
+        <textarea id="rq" rows="1" placeholder="모두에게 보내기 (Enter) · @엑사원을 붙이면 AI가 답해요"></textarea>
         <button class="btn" id="rgo">보내기</button>
       </form>
     </div>
@@ -129,8 +129,8 @@ section.drop{outline:2px dashed var(--blue);outline-offset:-6px}
     <div id="log"></div>
     <form id="f">
       <div id="att"></div>
-      <button class="clip" id="clip" type="button" title="파일 첨부 (이미지·PDF·워드·엑셀·텍스트, 5MB까지)">📎</button>
-      <input type="file" id="file" multiple hidden accept="image/png,image/jpeg,image/gif,image/webp,application/pdf,.docx,.xlsx,.xls,.txt,.md,.csv,.json,.tex,.html">
+      <button class="clip" id="clip" type="button" title="파일 첨부 (PDF·워드·엑셀·텍스트, 5MB까지. 엑사원은 글만 읽어요)">📎</button>
+      <input type="file" id="file" multiple hidden accept="application/pdf,.pdf,.docx,.xlsx,.xls,.txt,.md,.csv,.json,.tex,.html">
       <textarea id="q" rows="1" placeholder="무엇이든 물어보세요 (Enter 보내기 · 📎 파일 첨부)"></textarea>
       <button class="btn" id="go">보내기</button>
     </form>
@@ -237,7 +237,7 @@ const SAMPLES = ["중학 수학 교재 코너명을 지을 때 좋은 기준을 
 function render() {
   log.innerHTML = "";
   if (!history.length) {
-    log.innerHTML = `<div class="empty"><b>Claude에게 자유롭게 물어보세요</b>이 대화는 나만 보이고, 회의록과 연결되지 않아요.<br>회의록 내용을 쓰고 싶으면 복사해서 붙여 넣으세요.<div class="chips"></div></div>`;
+    log.innerHTML = `<div class="empty"><b>엑사원에게 자유롭게 물어보세요</b>이 대화는 나만 보이고, 회의록과 연결되지 않아요.<br>회의록 내용을 쓰고 싶으면 복사해서 붙여 넣으세요.<div class="chips"></div></div>`;
     const chips = log.querySelector(".chips");
     SAMPLES.forEach(s => { const b = document.createElement("button"); b.type = "button"; b.textContent = s; b.onclick = () => { q.value = s; q.focus(); }; chips.appendChild(b); });
     return;
@@ -264,7 +264,7 @@ function tools(d, text) {
   b.onclick = async () => { try { await navigator.clipboard.writeText(text); b.textContent = "복사됨"; setTimeout(() => b.textContent = "복사", 1200); } catch {} };
   t.appendChild(b); d.appendChild(t);
 }
-const ERR = { ip: "잠시 질문이 많았어요. 몇 분 뒤 다시 해 주세요.", daily: "오늘 쓸 수 있는 양을 다 썼어요. 내일 다시 써 주세요.", no_key: "아직 Claude 연결(API 키)이 안 되어 있어요.", bad_messages: "대화가 너무 길어요. '새 대화'를 눌러 주세요." };
+const ERR = { ip: "잠시 질문이 많았어요. 몇 분 뒤 다시 해 주세요.", daily: "오늘 쓸 수 있는 양을 다 썼어요. 내일 다시 써 주세요.", no_key: "아직 엑사원 연결(API 키)이 안 되어 있어요.", bad_messages: "대화가 너무 길어요. '새 대화'를 눌러 주세요." };
 
 async function ask(text) {
   if (busy) return;
@@ -273,16 +273,14 @@ async function ask(text) {
   busy = true; go.disabled = true;
   if (!history.length) log.innerHTML = "";
   const texts = atts.filter(a => a.kind === "text").map(a => `\n\n[첨부 파일: ${a.name}]\n${a.text}`).join("");
-  const files = atts.flatMap(a => a.parts || []);
   const msg = { role: "user", content: text + texts, show: text, names: atts.map(a => a.name) };
-  if (files.length) msg.files = files;
   history.push(msg);
   pending = []; drawAtt();
   add("user", text, msg.names);
   const d = add("assistant", ""); d.innerHTML = '<span class="wait">생각하는 중…</span>';
   let out = "";
   try {
-    const r = await fetch("/api/corner-chat", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ messages: history.slice(-30).map(m => m.files ? { role: m.role, content: m.content, files: m.files } : { role: m.role, content: m.content }) }) });
+    const r = await fetch("/api/corner-chat", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ messages: history.slice(-30).map(m => ({ role: m.role, content: m.content })) }) });
     if (!r.ok) { const j = await r.json().catch(() => ({})); throw new Error(ERR[j.error] || "답을 받지 못했어요. 잠시 뒤 다시 해 주세요."); }
     const rd = r.body.getReader(), dec = new TextDecoder();
     let last = 0;
@@ -292,7 +290,6 @@ async function ask(text) {
       out += dec.decode(value, { stream: true });
       if (Date.now() - last > 80) { d.innerHTML = md(out.replace("[[ERROR]]", "")); log.scrollTop = log.scrollHeight; last = Date.now(); }
     }
-    if (out.includes("[[FILE_GONE]]")) throw new Error("예전에 올린 파일의 보관 기간(7일)이 지났어요. '새 대화'를 눌러 다시 시작해 주세요.");
     if (out.includes("[[ERROR]]")) { out = out.replace("[[ERROR]]", "").trim(); if (!out) throw new Error("답을 받지 못했어요. 잠시 뒤 다시 해 주세요."); out += "\n\n(중간에 끊겼어요.)"; }
     d.innerHTML = md(out); tools(d, out);
     history.push({ role: "assistant", content: out });
@@ -317,36 +314,31 @@ q.addEventListener("input", grow);
 $("#reset").onclick = () => { if (busy) return; history = []; pending = []; drawAtt(); store.set("corner.chat", history); render(); };
 
 /* ---------- 파일 첨부 ---------- */
-// 이미지·PDF는 서버를 거쳐 Claude 파일 보관함(7일)에 올리고, 워드·텍스트는 글자만 뽑아 질문에 붙임
+// PDF·워드·엑셀·텍스트는 브라우저에서 글자만 뽑아 질문에 붙임 (엑사원은 글만 읽음)
 let pending = [];
 const att = $("#att"), fileEl = $("#file");
 const TEXT_EXT = /\.(txt|md|csv|json|tex|html?)$/i;
-const MAX_UP = 3_000_000, MAX_FILE = 5 * 1024 * 1024, MAX_TEXT = 150_000;
+const MAX_FILE = 5 * 1024 * 1024, MAX_TEXT = 150_000;
 const cut = t => t.length > MAX_TEXT ? t.slice(0, MAX_TEXT) + "\n…(파일이 길어 앞부분만 보냄)" : t;
 const loaded = {};
 const need = (src, test) => test() ? Promise.resolve() : (loaded[src] ||= new Promise((ok, no) => { const sc = document.createElement("script"); sc.src = src; sc.onload = ok; sc.onerror = () => { delete loaded[src]; no(new Error("읽기 도구를 불러오지 못했어요.")); }; document.head.appendChild(sc); }));
-async function upload(blob, name, type) {
-  const r = await fetch("/api/corner-file", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ name, type, data: b64(await blob.arrayBuffer()) }) });
-  const j = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error({ ip: "잠시 파일을 많이 올렸어요. 몇 분 뒤 다시 해 주세요.", too_big: "파일이 너무 커요.", no_key: "아직 Claude 연결(API 키)이 안 되어 있어요." }[j.error] || "파일을 올리지 못했어요.");
-  return { id: j.id, kind: j.kind, name };
-}
-// 서버 한 번에 3MB까지라, 큰 PDF는 쪽 단위로 나눠서 여러 개로 올림
-async function splitPdf(file) {
-  await need("/corner/vendor/pdf-lib.min.js", () => window.PDFLib);
-  const src = await PDFLib.PDFDocument.load(await file.arrayBuffer(), { ignoreEncryption: true });
-  const all = src.getPageIndices();
-  const make = async idx => { const d = await PDFLib.PDFDocument.create(); (await d.copyPages(src, idx)).forEach(pg => d.addPage(pg)); return new Blob([await d.save()], { type: "application/pdf" }); };
-  const out = [];
-  const go = async idx => {
-    const blob = await make(idx);
-    if (blob.size <= MAX_UP) { out.push({ idx, blob }); return; }
-    if (idx.length === 1) throw new Error(`${idx[0] + 1}쪽 한 쪽이 너무 커요.`);
-    const h = Math.ceil(idx.length / 2); await go(idx.slice(0, h)); await go(idx.slice(h));
-  };
-  const n = Math.max(2, Math.ceil(file.size / (MAX_UP * 0.8))), per = Math.ceil(all.length / n);
-  for (let i = 0; i < all.length; i += per) await go(all.slice(i, i + per));
-  return out.map(o => ({ blob: o.blob, label: `${o.idx[0] + 1}~${o.idx[o.idx.length - 1] + 1}쪽` }));
+// PDF는 글자만 뽑아서 붙임 (엑사원은 글만 읽음. 스캔본처럼 글자가 없는 PDF는 못 읽음)
+async function pdfText(file) {
+  await need("/corner/vendor/pdf.min.js", () => window.pdfjsLib);
+  pdfjsLib.GlobalWorkerOptions.workerSrc = "/corner/vendor/pdf.worker.min.js";
+  const doc = await pdfjsLib.getDocument({ data: new Uint8Array(await file.arrayBuffer()) }).promise;
+  const pages = [];
+  for (let i = 1; i <= doc.numPages; i++) {
+    const tc = await (await doc.getPage(i)).getTextContent();
+    let line = "", out = [];
+    for (const it of tc.items) { line += it.str; if (it.hasEOL) { out.push(line); line = ""; } }
+    if (line) out.push(line);
+    pages.push(`[${i}쪽]\n` + out.join("\n"));
+    if (pages.join("").length > MAX_TEXT) break;
+  }
+  const text = pages.join("\n\n");
+  if (!text.replace(/\[\d+쪽\]/g, "").trim()) throw new Error("글자를 찾지 못했어요. 스캔한 PDF는 읽을 수 없어요.");
+  return text;
 }
 function flash(m) { const w = document.createElement("div"); w.className = "msg bot"; w.innerHTML = `<span class="wait"></span>`; w.firstChild.textContent = m; log.appendChild(w); log.scrollTop = log.scrollHeight; setTimeout(() => w.remove(), 5000); }
 function drawAtt() {
@@ -358,15 +350,6 @@ function drawAtt() {
     x.onclick = () => { pending = pending.filter(p => p !== a); drawAtt(); };
     c.appendChild(x); att.appendChild(c);
   });
-}
-const b64 = buf => { let s = ""; const u = new Uint8Array(buf); for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(s); };
-async function shrinkImage(file) {
-  if (file.type === "image/gif" || file.size < 1_500_000) return file;
-  const img = await createImageBitmap(file);
-  const k = Math.min(1, 2000 / Math.max(img.width, img.height));
-  const cv = document.createElement("canvas"); cv.width = Math.round(img.width * k); cv.height = Math.round(img.height * k);
-  cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height);
-  return await new Promise(r => cv.toBlob(r, "image/jpeg", 0.85));
 }
 async function addFile(file) {
   if (pending.length >= 5) { flash("한 번에 5개까지 붙일 수 있어요."); return; }
@@ -385,18 +368,11 @@ async function addFile(file) {
       Object.assign(a, { kind: "text", text: cut(text) });
     } else if (TEXT_EXT.test(a.name) || file.type.startsWith("text/")) {
       Object.assign(a, { kind: "text", text: cut(await file.text()) });
-    } else if (file.type === "application/pdf") {
-      if (file.size <= MAX_UP) a.parts = [await upload(file, a.name, "application/pdf")];
-      else {
-        const pieces = await splitPdf(file);
-        a.parts = [];
-        for (const pc of pieces) a.parts.push(await upload(pc.blob, `${a.name} (${pc.label})`, "application/pdf"));
-      }
-    } else if (/^image\/(png|jpeg|gif|webp)$/.test(file.type)) {
-      const blob = await shrinkImage(file);
-      if (blob.size > MAX_UP) throw new Error("이미지가 너무 커요.");
-      a.parts = [await upload(blob, a.name, blob.type || file.type)];
-    } else throw new Error("이 형식은 아직 못 읽어요. 이미지·PDF·워드·엑셀·텍스트 파일을 올려 주세요. (한글 hwp는 PDF로 저장해서 올려 주세요)");
+    } else if (file.type === "application/pdf" || /\.pdf$/i.test(a.name)) {
+      Object.assign(a, { kind: "text", text: cut(await pdfText(file)) });
+    } else if (file.type.startsWith("image/")) {
+      throw new Error("엑사원은 글만 읽을 수 있어서 이미지는 올릴 수 없어요.");
+    } else throw new Error("이 형식은 아직 못 읽어요. PDF·워드·엑셀·텍스트 파일을 올려 주세요. (한글 hwp는 PDF로 저장해서 올려 주세요)");
     a.busy = false;
   } catch (e) {
     pending = pending.filter(p => p !== a);
@@ -413,16 +389,16 @@ chatSec.addEventListener("dragleave", e => { if (!chatSec.contains(e.relatedTarg
 chatSec.addEventListener("drop", e => { e.preventDefault(); chatSec.classList.remove("drop"); tab("me"); [...e.dataTransfer.files].forEach(addFile); });
 render();
 
-/* ---------------- 함께 채팅 (참가자 + @엑사원·@클로드) ---------------- */
+/* ---------------- 함께 채팅 (참가자 + @엑사원) ---------------- */
 const rlog = $("#rlog"), rq = $("#rq"), rgo = $("#rgo");
 const BOTNAME = { claude: "클로드", exaone: "엑사원" };
-const BOTRE = { claude: /@\s*(클로드|claude)/i, exaone: /@\s*(엑사원|exaone)/i };
+const BOTRE = { exaone: /@\s*(엑사원|exaone)/i };
 let rows = [], lastId = 0, rTimer = null, rSending = false;
 function tab(t) {
   document.querySelectorAll(".tab").forEach(b => b.classList.toggle("on", b.dataset.tab === t));
   $("#roomPanel").hidden = t !== "room"; $("#mePanel").hidden = t !== "me";
   $("#reset").hidden = t !== "me";
-  $("#tabHint").textContent = t === "room" ? "모두 함께 · AI는 부를 때만 답해요" : "Opus 5.5 · 나만 보는 대화";
+  $("#tabHint").textContent = t === "room" ? "모두 함께 · AI는 부를 때만 답해요" : "K-EXAONE 2.5 · 나만 보는 대화";
   store.set("corner.tab", t);
   if (t === "room") { rlog.scrollTop = rlog.scrollHeight; }
 }
@@ -431,7 +407,7 @@ tab(store.get("corner.tab", "room"));
 function drawRoom() {
   const atBottom = rlog.scrollHeight - rlog.scrollTop - rlog.clientHeight < 80;
   rlog.innerHTML = "";
-  if (!rows.length) rlog.innerHTML = '<div class="empty"><b>함께 쓰는 채팅방이에요</b>여기 쓴 글은 접속한 모두에게 보여요.<br>AI 의견이 필요하면 <b style="display:inline">@엑사원</b> 또는 <b style="display:inline">@클로드</b>를 붙여 부르세요.</div>';
+  if (!rows.length) rlog.innerHTML = '<div class="empty"><b>함께 쓰는 채팅방이에요</b>여기 쓴 글은 접속한 모두에게 보여요.<br>AI 의견이 필요하면 <b style="display:inline">@엑사원</b>을 붙여 부르세요.</div>';
   const me = myName();
   rows.forEach(r => {
     const d = document.createElement("div");
