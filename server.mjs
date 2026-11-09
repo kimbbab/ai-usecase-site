@@ -7,6 +7,7 @@ import { handleChat, hasKey, readJson } from "./lib/chat.mjs";
 import { handlePosts, hasStore } from "./lib/store.mjs";
 import { handleNews, handleNewsRefresh } from "./lib/news.mjs";
 import { handleCornerMinutes, handleCornerChat, handleCornerFile } from "./lib/corner.mjs";
+import { handleRoom } from "./lib/room.mjs";
 
 const PUBLIC = path.join(path.dirname(fileURLToPath(import.meta.url)), "public");
 const PORT = process.env.PORT || 3000;
@@ -36,6 +37,7 @@ http.createServer((req, res) => {
   if (url === "/api/corner-minutes") return void handleCornerMinutes(req, res, readJson);
   if (url === "/api/corner-chat") return void handleCornerChat(req, res, readJson);
   if (url === "/api/corner-file") return void handleCornerFile(req, res, readJson);
+  if (url === "/api/corner-room") return void handleRoom(req, res, readJson);
   if (url === "/healthz") return void res.writeHead(200).end("ok");
   if (req.method !== "GET" && req.method !== "HEAD") return void res.writeHead(405).end();
   serveStatic(req, res);
