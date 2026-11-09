@@ -432,7 +432,11 @@ function drawRoom() {
 function addRows(list, bump = true) {
   let changed = false;
   for (const r of list || []) if (!rows.some(x => x.id === r.id)) { rows.push(r); changed = true; if (bump) lastId = Math.max(lastId, r.id); }
-  if (changed) { rows.sort((a, b) => a.id - b.id); if (rows.length > 300) rows = rows.slice(-300); }
+  if (changed) {
+    // 보내는 중(임시) 글이 서버에서 먼저 들어오면 임시 글은 지움 → 같은 글 2번 안 보이게
+    rows = rows.filter(t => !t.temp || !rows.some(x => !x.temp && !x.bot && x.author === t.author && x.body === t.body));
+    rows.sort((a, b) => a.id - b.id); if (rows.length > 300) rows = rows.slice(-300);
+  }
   return changed;
 }
 async function pollRoom() {
