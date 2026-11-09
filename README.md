@@ -37,8 +37,9 @@ ANTHROPIC_API_KEY=... npm start   # http://localhost:3000
 
 ## 코너명 회의 페이지 (/corner/)
 - 왼쪽 회의록: 접속한 사람 모두가 함께 고침. 2.5초마다 새 판을 받아 내 수정과 합침(diff-match-patch). 저장은 Supabase `corner_minutes` 표에 고칠 때마다 한 줄씩 쌓임(맨 끝 줄이 현재 회의록, `base_id` unique로 동시 저장 충돌 감지). 예전 판은 표에서 볼 수 있음.
-- 오른쪽 챗봇: Claude Opus 5.5(`claude-opus-5-5`, effort medium), 각자 브라우저에만 대화 저장, 회의록은 보내지 않음. `lib/corner.mjs`, `/api/corner-chat`. IP당 10분 40회, 하루 `CORNER_DAILY_LIMIT`(기본 400)회.
-- 챗봇 파일 첨부(📎·끌어놓기·붙여넣기, 한 번에 5개, 파일당 5MB): 이미지·PDF는 `/api/corner-file`이 Anthropic Files API에 7일 보관으로 올림. Vercel 요청 4.5MB 제한 때문에 한 번에 3MB까지라, 큰 PDF는 브라우저에서 pdf-lib로 쪽을 나눠 여러 개로 올림. 워드(docx, mammoth)·엑셀(xlsx/xls, SheetJS → 시트별 CSV)·텍스트는 브라우저에서 글자만 뽑아 질문에 붙임(15만 자까지). hwp는 미지원.
+- 오른쪽 '나만 엑사원' 탭: K-EXAONE 2.5(`lib/exaone.mjs`, effort high, 스트리밍), 각자 브라우저에만 대화 저장, 회의록은 보내지 않음. `/api/corner-chat`. IP당 10분 40회, 하루 `CORNER_DAILY_LIMIT`(기본 400)회.
+- 파일 첨부(📎·끌어놓기·붙여넣기, 한 번에 5개, 파일당 5MB): 엑사원은 글만 읽으므로 PDF(pdf.js)·워드(mammoth)·엑셀(SheetJS)·텍스트를 브라우저에서 글자로 바꿔 질문에 붙임(15만 자까지). 이미지·스캔 PDF·hwp는 안 됨.
+- 11/9 사용자 요청으로 이 페이지에서 Claude API는 뺌(사이트 메인 챗봇은 그대로).
 - 표 만들기(Supabase SQL):
 ```sql
 create table public.corner_minutes (
@@ -52,14 +53,14 @@ alter table public.corner_minutes enable row level security;
 create policy "anyone can read corner minutes" on public.corner_minutes for select to anon using (true);
 create policy "anyone can add corner minutes" on public.corner_minutes for insert to anon with check (true);
 ```
-- 함께 채팅(오른쪽 '함께 채팅' 탭, `lib/room.mjs`, `/api/corner-room`): 참가자 모두의 단체 채팅. 글에 `@엑사원` 또는 `@클로드`가 있으면 최근 40개 대화를 보고 그 AI가 답함. 엑사원은 K-EXAONE 2.5(`k-exaone_v2.5`, `https://api.exaone.ai/v1/chat/completions`, OpenAI 형식, reasoning_effort low), 환경변수 `EXAONE_API_KEY`. 클로드는 Opus 5.5(effort low). AI 부르기 IP당 10분 40번, 하루 `ROOM_DAILY_LIMIT`(기본 400)번.
+- 함께 채팅(오른쪽 '함께 채팅' 탭, `lib/room.mjs`, `/api/corner-room`): 참가자 모두의 단체 채팅. 글에 `@엑사원`이 있으면 최근 40개 대화를 보고 K-EXAONE 2.5(`k-exaone_v2.5`, `https://api.exaone.ai/v1/chat/completions`, OpenAI 형식, reasoning_effort low)가 답함. 환경변수 `EXAONE_API_KEY`. AI 부르기 IP당 10분 40번, 하루 `ROOM_DAILY_LIMIT`(기본 400)번.
 - 함께 채팅 표(Supabase SQL):
 ```sql
 create table public.corner_chat (
   id bigint generated always as identity primary key,
   author text not null check (char_length(author) between 1 and 20),
   body text not null check (char_length(body) between 1 and 20000),
-  bot text check (bot in ('claude','exaone')),
+  bot text check (bot in ('claude','exaone')),  -- claude는 예전 기록용
   reply_to bigint,
   created_at timestamptz not null default now()
 );
