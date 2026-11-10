@@ -37,8 +37,7 @@ ANTHROPIC_API_KEY=... npm start   # http://localhost:3000
 
 ## 코너명 회의 페이지 (/corner/)
 - 왼쪽 회의록: 접속한 사람 모두가 함께 고침. 2.5초마다 새 판을 받아 내 수정과 합침(diff-match-patch). 저장은 Supabase `corner_minutes` 표에 고칠 때마다 한 줄씩 쌓임(맨 끝 줄이 현재 회의록, `base_id` unique로 동시 저장 충돌 감지). 예전 판은 표에서 볼 수 있음.
-- 오른쪽 '나만 엑사원' 탭: K-EXAONE 2.5(`lib/exaone.mjs`, effort high, 스트리밍), 각자 브라우저에만 대화 저장, 회의록은 보내지 않음. `/api/corner-chat`. IP당 10분 40회, 하루 `CORNER_DAILY_LIMIT`(기본 400)회.
-- 파일 첨부(📎·끌어놓기·붙여넣기, 한 번에 5개, 파일당 5MB): 엑사원은 글만 읽으므로 PDF(pdf.js)·워드(mammoth)·엑셀(SheetJS)·텍스트를 브라우저에서 글자로 바꿔 질문에 붙임(15만 자까지). 이미지·스캔 PDF·hwp는 안 됨.
+- 모바일(820px 이하)에서는 채팅이 화면 전체, 회의록은 위쪽 '회의록' 버튼으로 엶.
 - 11/9 사용자 요청으로 이 페이지에서 Claude API는 뺌(사이트 메인 챗봇은 그대로).
 - 표 만들기(Supabase SQL):
 ```sql
