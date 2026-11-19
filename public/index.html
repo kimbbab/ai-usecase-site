@@ -359,6 +359,13 @@ ul.clean{margin:0;padding-left:18px;display:grid;gap:6px}
 .nrow a::after{content:" ↗";color:var(--faint);font-size:12px}
 .nrow em{font-style:normal;font-size:12px;color:var(--faint);white-space:nowrap}
 @media (max-width:640px){.nrow{grid-template-columns:1fr}.nrow .c{justify-self:start}}
+.pager{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:4px;padding:16px 22px 6px;border-top:1px solid var(--line)}
+.pager button{min-width:34px;height:34px;padding:0 10px;border:1px solid var(--line);background:var(--card);border-radius:8px;font:inherit;font-size:14px;color:var(--ink);cursor:pointer}
+.pager button:hover:not(:disabled){background:var(--soft)}
+.pager button[aria-current="page"]{background:var(--green);border-color:var(--green);color:var(--go-ink);font-weight:700}
+.pager button:disabled{opacity:.4;cursor:default}
+.pager .gap{color:var(--faint);padding:0 4px}
+.pager-info{text-align:center;font-size:12.5px;color:var(--faint);padding:0 22px 6px}
 @media (max-width:1000px){.layout2{grid-template-columns:minmax(0,1fr)}.layout2 .side{position:static}}
 @media (max-width:640px){.pfeat{min-height:96px}.pcard{grid-template-columns:110px minmax(0,1fr)}.pcard .th{width:110px;height:74px}.pnews{grid-template-columns:1fr}.pgrid{grid-template-columns:1fr}.bigsearch{height:54px}.bigsearch input{font-size:16px}.top-in .logo span{display:none}}
 </style>
@@ -1077,7 +1084,7 @@ draw=function(){
   $("#write").textContent=view==="qna"?"질문하기":"사례 올리기";
   shortcuts();
 };
-route=function(){if(skipRoute){skipRoute=false;return}G.kw="";G.all=false;const h=location.hash.slice(1);view=["lectures","cases","qna","news","ai"].includes(h)?h:"home";detail=null;draw();window.scrollTo(0,0)};
+route=function(){if(skipRoute){skipRoute=false;return}G.kw="";G.all=false;G.npage=1;G.upage=1;const h=location.hash.slice(1);view=["lectures","cases","qna","news","ai"].includes(h)?h:"home";detail=null;draw();window.scrollTo(0,0)};
 $("#q").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();if(view!=="home"){}draw()}});
 
 /* 챗봇 답의 "출처:" 줄을 눌러서 이동하는 버튼으로 */
@@ -1098,34 +1105,42 @@ function srcLinks(d,text){
 }
 
 /* ===== AX 뉴스: /api/news (매일 아침 7시 자동으로 모음) ===== */
-let NEWSFEED=[],UPDATES=[],OFFICIAL=[],NEWS_LOADED=false;G.ncat="";G.uco="";G.usrc="official";
+let NEWSFEED=[],UPDATES=[],OFFICIAL=[],NEWS_LOADED=false;G.ncat="";G.uco="";G.usrc="official";G.npage=1;G.upage=1;
+/* 페이지 넘기기: 한 쪽에 PER개씩 */
+const PER=15;
+function pageOf(L,key){const last=Math.max(1,Math.ceil(L.length/PER));G[key]=Math.min(Math.max(1,G[key]||1),last);return {items:L.slice((G[key]-1)*PER,G[key]*PER),cur:G[key],last}}
+function pager(P,key,total){if(P.last<=1)return "";const b=(n,label,dis,cur)=>`<button type="button" data-pg="${key}" data-n="${n}"${dis?" disabled":""}${cur?' aria-current="page"':""}${label!==String(n)?` aria-label="${label==="‹"?"이전 쪽":"다음 쪽"}"`:""}>${label}</button>`;
+  const nums=[];for(let i=1;i<=P.last;i++)if(i===1||i===P.last||Math.abs(i-P.cur)<=2)nums.push(i);
+  let h=b(P.cur-1,"‹",P.cur===1),prev=0;for(const i of nums){if(i-prev>1)h+=`<span class="gap">…</span>`;h+=b(i,String(i),false,i===P.cur);prev=i}h+=b(P.cur+1,"›",P.cur===P.last);
+  return `<nav class="pager" aria-label="쪽 넘기기">${h}</nav><div class="pager-info">${total}건 중 ${(P.cur-1)*PER+1}–${Math.min(P.cur*PER,total)}</div>`}
+document.addEventListener("click",e=>{const t=e.target.closest("[data-pg]");if(!t||t.disabled)return;G[t.dataset.pg]=+t.dataset.n;draw();window.scrollTo(0,0)});
 const mainFeed=()=>NEWSFEED;
 fetch("/api/news").then(r=>r.ok?r.json():{news:[]}).then(d=>{NEWSFEED=d.news||[];UPDATES=d.updates||[];OFFICIAL=d.official||[]}).catch(()=>{}).finally(()=>{NEWS_LOADED=true;if(view==="news"||view==="ai"||view==="home")draw()});
 const kday=iso=>{const d=new Date(new Date(iso).getTime()+9*3600e3);return `${d.getUTCMonth()+1}월 ${d.getUTCDate()}일 (${"일월화수목금토"[d.getUTCDay()]})`};
 const ktime=iso=>{const d=new Date(new Date(iso).getTime()+9*3600e3);return String(d.getUTCHours()).padStart(2,"0")+":"+String(d.getUTCMinutes()).padStart(2,"0")};
-document.addEventListener("click",e=>{const t=e.target.closest("[data-ncat]");if(t){G.ncat=t.dataset.ncat;draw()}});
+document.addEventListener("click",e=>{const t=e.target.closest("[data-ncat]");if(t){G.ncat=t.dataset.ncat;G.npage=1;draw()}});
 function axNews(){
   const s=srch();const cats=["기업 AX","교육·출판","정책·제도","기술·도구"];
   const F=NEWSFEED;
   const L=F.filter(n=>(!G.ncat||n.cat===G.ncat)&&(!s||(n.title+n.source+(n.summary||"")).includes(s)));
-  let rows="",day="";
-  for(const n of L){const k=n.published_at?kday(n.published_at):"날짜 없음";if(k!==day){day=k;rows+=`<div class="nday">${k}</div>`}
+  const P=pageOf(L,"npage");let rows="",day="";
+  for(const n of P.items){const k=n.published_at?kday(n.published_at):"날짜 없음";if(k!==day){day=k;rows+=`<div class="nday">${k}</div>`}
     rows+=`<div class="nrow"><span class="c">${esc(n.cat)}</span><div class="t"><a href="${esc(n.url)}" target="_blank" rel="noopener noreferrer">${esc(n.title)}</a>${n.summary?`<small>${esc(n.summary)}</small>`:""}</div><em>${esc(n.source)}${n.published_at?" · "+ktime(n.published_at):""}</em></div>`}
   return `<section class="pbox"><div class="nhead"><h1>AX 뉴스</h1><p>기업·교육·출판의 AI 전환 소식을 매일 아침 7시에 자동으로 모아요. 제목을 누르면 기사가 새 창으로 열려요. (모음: 네이버 뉴스 · 분류: Claude)</p></div>
   <div class="nchips"><button type="button" data-ncat="" aria-pressed="${!G.ncat}">전체 ${F.length}</button>${cats.map(c=>`<button type="button" data-ncat="${c}" aria-pressed="${G.ncat===c}">${c} ${F.filter(n=>n.cat===c).length}</button>`).join("")}</div>
-  ${rows||`<div class="empty" style="padding:30px 22px;color:var(--faint)">${NEWS_LOADED?"아직 모은 뉴스가 없어요. 매일 아침 7시에 새 뉴스가 들어와요.":"불러오는 중…"}</div>`}<div style="height:10px"></div></section>`;
+  ${rows||`<div class="empty" style="padding:30px 22px;color:var(--faint)">${NEWS_LOADED?"아직 모은 뉴스가 없어요. 매일 아침 7시에 새 뉴스가 들어와요.":"불러오는 중…"}</div>`}${pager(P,"npage",L.length)}<div style="height:10px"></div></section>`;
 }
 
 /* ===== AI 소식: 새 AI 모델·기능 출시 소식이 매일 쌓임 (cat = "AI 업데이트") ===== */
-document.addEventListener("click",e=>{const t=e.target.closest("[data-uco]");if(t){G.uco=t.dataset.uco;draw()}});
-document.addEventListener("click",e=>{const t=e.target.closest("[data-usrc]");if(t){G.usrc=t.dataset.usrc;G.uco="";draw()}});
+document.addEventListener("click",e=>{const t=e.target.closest("[data-uco]");if(t){G.uco=t.dataset.uco;G.upage=1;draw()}});
+document.addEventListener("click",e=>{const t=e.target.closest("[data-usrc]");if(t){G.usrc=t.dataset.usrc;G.uco="";G.upage=1;draw()}});
 function aiNews(){
   const s=srch(),off=G.usrc==="official",F=off?OFFICIAL:UPDATES;
   const cnt={};F.forEach(n=>cnt[n.co]=(cnt[n.co]||0)+1);
   const cos=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a]);
   const L=F.filter(n=>(!G.uco||n.co===G.uco)&&(!s||(n.co+n.product+n.summary+n.title+n.source).includes(s)));
-  let rows="",day="";
-  for(const n of L){const k=n.published_at?kday(n.published_at):"날짜 없음";if(k!==day){day=k;rows+=`<div class="nday">${k}</div>`}
+  const P=pageOf(L,"upage");let rows="",day="";
+  for(const n of P.items){const k=n.published_at?kday(n.published_at):"날짜 없음";if(k!==day){day=k;rows+=`<div class="nday">${k}</div>`}
     rows+=off?`<div class="nrow"><span class="c">${esc(n.co)}</span><div class="t"><a href="${esc(n.url)}" target="_blank" rel="noopener noreferrer">${esc(n.title)}</a>${n.summary?`<small>${esc(n.summary)}</small>`:""}</div><em>${esc(n.source)}</em></div>`
       :`<div class="nrow"><span class="c">${esc(n.co)}</span><div class="t"><a href="${esc(n.url)}" target="_blank" rel="noopener noreferrer"><b>${esc(n.product)}</b> · ${esc(n.summary)}</a><small>${esc(n.title)}</small></div><em>${esc(n.source)}</em></div>`}
   const picks=NEWS.map(n=>`<button type="button" data-news="${n.id}"><small>${esc(n.co)} · ${esc(n.state)}</small><b>${esc(n.model)}</b><span>${esc(n.sum)}</span></button>`).join("");
@@ -1134,7 +1149,7 @@ function aiNews(){
   <div class="usrc" role="tablist"><button type="button" data-usrc="official" aria-pressed="${off}">회사 공식 발표 <span>${OFFICIAL.length}</span></button><button type="button" data-usrc="news" aria-pressed="${!off}">뉴스 기사 <span>${UPDATES.length}</span></button></div>
   <p class="usrc-note">${off?"OpenAI · Anthropic · Google이 자기 사이트에 올린 발표를 한국어로 정리했어요. (번역: Claude)":"네이버 뉴스에서 ChatGPT · Claude · Gemini 같은 AI 도구의 새 기능 기사를 골랐어요. (정리: Claude)"}</p>
   <div class="nchips"><button type="button" data-uco="" aria-pressed="${!G.uco}">전체 ${F.length}</button>${cos.map(c=>`<button type="button" data-uco="${esc(c)}" aria-pressed="${G.uco===c}">${esc(c)} ${cnt[c]}</button>`).join("")}</div>
-  ${rows||`<div class="empty" style="padding:30px 22px;color:var(--faint)">${NEWS_LOADED?"아직 모은 소식이 없어요. 매일 아침 7시에 새 소식이 들어와요.":"불러오는 중…"}</div>`}<div style="height:10px"></div></section>`;
+  ${rows||`<div class="empty" style="padding:30px 22px;color:var(--faint)">${NEWS_LOADED?"아직 모은 소식이 없어요. 매일 아침 7시에 새 소식이 들어와요.":"불러오는 중…"}</div>`}${pager(P,"upage",L.length)}<div style="height:10px"></div></section>`;
 }
 
 route();
